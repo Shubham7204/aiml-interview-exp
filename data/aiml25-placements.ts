@@ -1,4 +1,4 @@
-export interface PlacementRecord {
+export interface PlacementExperience {
   SrNo: number
   StudentName: string
   Company: string
@@ -6,7 +6,7 @@ export interface PlacementRecord {
   PlacementExperienceLink: string
 }
 
-export const aiml25Placements: PlacementRecord[] = [
+export const aiml25Placements: PlacementExperience[] = [
   {
     SrNo: 1,
     StudentName: "Ritesh Konka",
@@ -37,7 +37,7 @@ export const aiml25Placements: PlacementRecord[] = [
   },
   {
     SrNo: 5,
-    StudentName: "Mufaddal Bharmal ",
+    StudentName: "Mufaddal Bharmal",
     Company: "ZS Associates",
     CTC: 13.65,
     PlacementExperienceLink: "https://drive.google.com/file/d/1fI7z7RG9Nne1gczg9aP--KjRIoIXJwo-/view?usp=drivesdk",
@@ -93,7 +93,7 @@ export const aiml25Placements: PlacementRecord[] = [
   },
   {
     SrNo: 13,
-    StudentName: "Manav Sangoi ",
+    StudentName: "Manav Sangoi",
     Company: "Gupshup",
     CTC: 16,
     PlacementExperienceLink: "https://drive.google.com/file/d/1YPyfLN-R6NQWPWyw6X94ilg2E_wB15hN/view?usp=sharing",
