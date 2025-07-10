@@ -6,6 +6,8 @@ import { companies } from "../data/companies"
 import { getExperiences } from "../lib/database"
 import { Users } from "lucide-react"
 import type { Company } from "../types/company"
+import { Footer } from "../components/footer"
+import Link from "next/link"
 
 export default function HomePage() {
   const [companiesWithExperiences, setCompaniesWithExperiences] = useState<Company[]>([])
@@ -53,26 +55,30 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Users className="w-5 h-5 text-white" />
+              <img src="/djsce-logo.png" alt="DJSCE Logo" className="w-10 h-10 object-contain" />
+              <div>
+                <h1 className="text-xl font-bold">AIML 26 Placement Experiences</h1>
+                <p className="text-sm text-gray-600">Department of AIML, DJSCE</p>
               </div>
-              <h1 className="text-xl font-bold">AIML 26 Placement Experiences</h1>
             </div>
+            <Link href="/aiml-25" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+              View AIML 25 →
+            </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {hasAnyExperiences ? (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Placement Interview Experiences</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">Interview Experiences</h2>
               <p className="text-gray-600">Browse real interview experiences shared by AIML 26 students</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -95,6 +101,7 @@ export default function HomePage() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   )
 }
