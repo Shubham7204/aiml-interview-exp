@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { useRouter } from "next/navigation"
@@ -119,6 +119,25 @@ export default function AdminPage() {
                   <Link href="/aiml-25">
                     <Users className="w-4 h-4 mr-2" />
                     View AIML 25
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <GraduationCap className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <CardTitle>Manage Batches</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">Add new batches and manage existing ones.</p>
+                <Button asChild variant="outline" className="w-full bg-transparent">
+                  <Link href="/admin/batches">
+                    <GraduationCap className="w-4 h-4 mr-2" />
+                    Manage Batches
                   </Link>
                 </Button>
               </CardContent>

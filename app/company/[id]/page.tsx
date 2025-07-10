@@ -5,13 +5,14 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import { companies } from "../../../data/companies"
-import { getExperiencesByCompany } from "../../../lib/database"
+import { getExperiencesByCompany, getBatches } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft, ExternalLink, MapPin, Users, PlusCircle } from "lucide-react"
-import type { Experience } from "../../../types/company"
+import { ArrowLeft, ExternalLink, MapPin, Users, PlusCircle, Calendar } from "lucide-react"
+import type { Experience, Batch } from "../../../types/company"
 
 interface CompanyPageProps {
   params: { id: string }
@@ -20,24 +21,26 @@ interface CompanyPageProps {
 export default function CompanyPage({ params }: CompanyPageProps) {
   const { id } = params
   const [experiences, setExperiences] = useState<Experience[]>([])
+  const [batches, setBatches] = useState<Batch[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     setIsAdmin(isAuthenticated())
 
-    async function loadExperiences() {
+    async function loadData() {
       try {
-        const companyExperiences = await getExperiencesByCompany(id)
+        const [companyExperiences, allBatches] = await Promise.all([getExperiencesByCompany(id), getBatches()])
         setExperiences(companyExperiences)
+        setBatches(allBatches)
       } catch (error) {
-        console.error("Error loading experiences:", error)
+        console.error("Error loading data:", error)
       } finally {
         setLoading(false)
       }
     }
 
-    loadExperiences()
+    loadData()
   }, [id])
 
   const company = companies.find((c) => c.id === id)
@@ -56,6 +59,19 @@ export default function CompanyPage({ params }: CompanyPageProps) {
       </div>
     )
   }
+
+  // Group experiences by batch
+  const experiencesByBatch = experiences.reduce(
+    (acc, experience) => {
+      const batchId = experience.batchId
+      if (!acc[batchId]) {
+        acc[batchId] = []
+      }
+      acc[batchId].push(experience)
+      return acc
+    },
+    {} as Record<string, Experience[]>,
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,6 +123,11 @@ export default function CompanyPage({ params }: CompanyPageProps) {
                     <Users className="w-4 h-4 mr-1" />
                     {experiences.length} Experience{experiences.length !== 1 ? "s" : ""}
                   </Badge>
+                  <Badge variant="outline" className="text-sm">
+                    <Calendar className="w-4 h-4 mr-1" />
+                    {Object.keys(experiencesByBatch).length} Batch
+                    {Object.keys(experiencesByBatch).length !== 1 ? "es" : ""}
+                  </Badge>
                 </div>
                 {company.website && (
                   <Button variant="outline" asChild>
@@ -123,51 +144,74 @@ export default function CompanyPage({ params }: CompanyPageProps) {
 
         {/* Experiences Section */}
         {experiences.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {company.name} Interview Experiences ({experiences.length})
               </h2>
-              <p className="text-gray-600">Real interview experiences shared by AIML 26 students</p>
+              <p className="text-gray-600">
+                Real interview experiences shared by AIML students across different batches
+              </p>
             </div>
 
-            {/* Experience Cards */}
-            <div className="grid gap-6">
-              {experiences.map((experience) => (
-                <Card key={experience.id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg mb-2">{experience.title}</CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <span>Role: {experience.role}</span>
-                          <span>•</span>
-                          <span>By {experience.author}</span>
-                        </div>
-                      </div>
-                      <Button size="sm" asChild>
-                        <Link href={`/experience/${experience.id}`}>Read More</Link>
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {experience.tags?.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div
-                      className="text-sm text-gray-600 line-clamp-3"
-                      dangerouslySetInnerHTML={{
-                        __html: experience.content.replace(/<[^>]*>/g, "").substring(0, 200) + "...",
-                      }}
-                    />
-                  </CardContent>
-                </Card>
+            {/* Group experiences by batch */}
+            {batches
+              .filter((batch) => experiencesByBatch[batch.id])
+              .map((batch) => (
+                <div key={batch.id} className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-xl font-semibold text-gray-900">{batch.name}</h3>
+                    <Badge variant="secondary" className="text-sm">
+                      {experiencesByBatch[batch.id].length} Experience
+                      {experiencesByBatch[batch.id].length !== 1 ? "s" : ""}
+                    </Badge>
+                  </div>
+
+                  <div className="grid gap-6">
+                    {experiencesByBatch[batch.id].map((experience) => (
+                      <Card key={experience.id} className="hover:shadow-md transition-shadow">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg mb-2">{experience.title}</CardTitle>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <span>Role: {experience.role}</span>
+                                <span>•</span>
+                                <span>By {experience.author}</span>
+                                <span>•</span>
+                                <span>{batch.name}</span>
+                              </div>
+                            </div>
+                            <Button size="sm" asChild>
+                              <Link href={`/experience/${experience.id}`}>Read More</Link>
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex flex-wrap gap-2 mb-3">
+                            {experience.tags?.map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          <div
+                            className="text-sm text-gray-600 line-clamp-3"
+                            dangerouslySetInnerHTML={{
+                              __html: experience.content.replace(/<[^>]*>/g, "").substring(0, 200) + "...",
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {/* Add separator between batches except for the last one */}
+                  {batch.id !== batches.filter((b) => experiencesByBatch[b.id]).slice(-1)[0]?.id && (
+                    <Separator className="my-8" />
+                  )}
+                </div>
               ))}
-            </div>
           </div>
         ) : (
           <div className="text-center py-12">

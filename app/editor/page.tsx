@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { CompanySelector } from "../../components/company-selector"
 import { companies } from "../../data/companies"
-import { saveExperience } from "../../lib/database"
+import { saveExperience, getBatchByYear } from "../../lib/database"
 import { isAuthenticated } from "../../lib/auth"
 import {
   Bold,
@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { BatchSelector } from "../../components/batch-selector"
 
 export default function EditorPage() {
   const searchParams = useSearchParams()
@@ -44,6 +45,7 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
+  const [selectedBatch, setSelectedBatch] = useState("")
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
@@ -54,7 +56,23 @@ export default function EditorPage() {
       return
     }
     setAuthChecked(true)
-  }, [router])
+
+    // Set default batch to 2026 if no batch is preselected
+    async function setDefaultBatch() {
+      if (!preselectedCompany) {
+        try {
+          const defaultBatch = await getBatchByYear(2026)
+          if (defaultBatch) {
+            setSelectedBatch(defaultBatch.id)
+          }
+        } catch (error) {
+          console.error("Error setting default batch:", error)
+        }
+      }
+    }
+
+    setDefaultBatch()
+  }, [router, preselectedCompany])
 
   const executeCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value)
@@ -115,8 +133,8 @@ function twoSum(nums, target) {
   }
 
   const handleSave = async () => {
-    if (!selectedCompany || !title || !role || !author) {
-      alert("Please fill in all required fields (Company, Title, Role, Candidate Name)")
+    if (!selectedBatch || !selectedCompany || !title || !role || !author) {
+      alert("Please fill in all required fields (Batch, Company, Title, Role, Candidate Name)")
       return
     }
 
@@ -130,6 +148,7 @@ function twoSum(nums, target) {
 
     try {
       const savedExperience = await saveExperience({
+        batchId: selectedBatch,
         companyId: selectedCompany,
         title,
         role,
@@ -215,6 +234,10 @@ function twoSum(nums, target) {
                     <span className="text-sm text-gray-600">Writing for {selectedCompanyData.name}</span>
                   </div>
                 )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="batch">Batch *</Label>
+                <BatchSelector onBatchSelect={setSelectedBatch} selectedBatch={selectedBatch} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="author">Candidate Name *</Label>

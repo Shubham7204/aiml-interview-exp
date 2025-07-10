@@ -8,9 +8,12 @@ import { Building2, Users, ExternalLink } from "lucide-react"
 
 interface CompanyCardProps {
   company: Company
+  batchId?: string
 }
 
-export function CompanyCard({ company }: CompanyCardProps) {
+export function CompanyCard({ company, batchId }: CompanyCardProps) {
+  const href = batchId ? `/batch/${batchId}/company/${company.id}` : `/company/${company.id}`
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardHeader className="pb-4">
@@ -49,7 +52,7 @@ export function CompanyCard({ company }: CompanyCardProps) {
               </Button>
             )}
             <Button size="sm" asChild>
-              <Link href={`/company/${company.id}`}>View Experiences</Link>
+              <Link href={href}>View Experiences</Link>
             </Button>
           </div>
         </div>

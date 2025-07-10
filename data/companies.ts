@@ -20,14 +20,4 @@ export const companies: Company[] = [
     industry: "Management Consulting",
     experienceCount: 0,
   },
-  {
-    id: "idfy",
-    name: "IDfy",
-    logo: "/logos/idfy.png",
-    description:
-      "Asia's leading TrustStack with enterprise-grade KYC, KYB, BGV, Risk Mitigation, Digital Onboarding and Privacy solutions.",
-    website: "https://www.idfy.com",
-    industry: "FinTech",
-    experienceCount: 0,
-  },
 ]
