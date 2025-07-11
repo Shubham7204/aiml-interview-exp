@@ -46,6 +46,9 @@ export default function EditorPage() {
   const [authChecked, setAuthChecked] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [selectedBatch, setSelectedBatch] = useState("")
+  const [selectionStatus, setSelectionStatus] = useState("")
+  const [ctc, setCTC] = useState("")
+  const [offerType, setOfferType] = useState("")
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
@@ -133,8 +136,8 @@ function twoSum(nums, target) {
   }
 
   const handleSave = async () => {
-    if (!selectedBatch || !selectedCompany || !title || !role || !author) {
-      alert("Please fill in all required fields (Batch, Company, Title, Role, Candidate Name)")
+    if (!selectedBatch || !selectedCompany || !title || !role || !author || !selectionStatus) {
+      alert("Please fill in all required fields (Batch, Company, Title, Role, Candidate Name, Selection Status)")
       return
     }
 
@@ -155,6 +158,9 @@ function twoSum(nums, target) {
         duration,
         author,
         content,
+        selectionStatus,
+        ctc: selectionStatus === "selected" ? Number.parseFloat(ctc) || null : null,
+        offerType: selectionStatus === "selected" ? offerType : null,
         tags: ["Technical Round", "HR Round"], // You can make this dynamic later
       })
 
@@ -264,6 +270,40 @@ function twoSum(nums, target) {
                   placeholder="e.g., March 2024"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="selection-status">Selection Status *</Label>
+                <Select value={selectionStatus} onValueChange={setSelectionStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="selected">Selected</SelectItem>
+                    <SelectItem value="not-selected">Not Selected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ctc">CTC (in LPA)</Label>
+                <Input
+                  id="ctc"
+                  type="number"
+                  step="0.1"
+                  placeholder="e.g., 12.5"
+                  value={ctc}
+                  onChange={(e) => setCTC(e.target.value)}
+                  disabled={selectionStatus !== "selected"}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offer-type">Offer Type</Label>
+                <Input
+                  id="offer-type"
+                  placeholder="e.g., Full-time, Internship, PPO"
+                  value={offerType}
+                  onChange={(e) => setOfferType(e.target.value)}
+                  disabled={selectionStatus !== "selected"}
                 />
               </div>
             </div>
@@ -442,6 +482,24 @@ function twoSum(nums, target) {
                         {duration && (
                           <span>
                             <strong>Period:</strong> {duration}
+                          </span>
+                        )}
+                        <span>
+                          <strong>Status:</strong>{" "}
+                          {selectionStatus === "selected"
+                            ? "Selected"
+                            : selectionStatus === "not-selected"
+                              ? "Not Selected"
+                              : "Not specified"}
+                        </span>
+                        {selectionStatus === "selected" && ctc && (
+                          <span>
+                            <strong>CTC:</strong> {ctc} LPA
+                          </span>
+                        )}
+                        {selectionStatus === "selected" && offerType && (
+                          <span>
+                            <strong>Offer Type:</strong> {offerType}
                           </span>
                         )}
                       </div>

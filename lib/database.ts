@@ -136,6 +136,9 @@ export async function saveExperience(experience: Omit<Experience, "id" | "create
         duration: experience.duration,
         author: experience.author,
         content: experience.content,
+        selection_status: experience.selectionStatus,
+        ctc: experience.ctc,
+        offer_type: experience.offerType,
         tags: experience.tags || [],
       },
     ])
@@ -167,6 +170,9 @@ export async function saveExperience(experience: Omit<Experience, "id" | "create
     duration: data.duration,
     author: data.author,
     content: data.content,
+    selectionStatus: data.selection_status,
+    ctc: data.ctc,
+    offerType: data.offer_type,
     tags: data.tags,
     createdAt: data.created_at,
     batch: data.batches
@@ -194,6 +200,9 @@ export async function updateExperience(experience: Experience): Promise<Experien
       duration: experience.duration,
       author: experience.author,
       content: experience.content,
+      selection_status: experience.selectionStatus,
+      ctc: experience.ctc,
+      offer_type: experience.offerType,
       tags: experience.tags || [],
       updated_at: new Date().toISOString(),
     })
@@ -226,6 +235,9 @@ export async function updateExperience(experience: Experience): Promise<Experien
     duration: data.duration,
     author: data.author,
     content: data.content,
+    selectionStatus: data.selection_status,
+    ctc: data.ctc,
+    offerType: data.offer_type,
     tags: data.tags,
     createdAt: data.created_at,
     batch: data.batches
@@ -282,6 +294,9 @@ export async function getExperiences(): Promise<Experience[]> {
     duration: item.duration,
     author: item.author,
     content: item.content,
+    selectionStatus: item.selection_status,
+    ctc: item.ctc,
+    offerType: item.offer_type,
     tags: item.tags,
     createdAt: item.created_at,
     batch: item.batches
@@ -330,6 +345,9 @@ export async function getExperiencesByBatch(batchId: string): Promise<Experience
     duration: item.duration,
     author: item.author,
     content: item.content,
+    selectionStatus: item.selection_status,
+    ctc: item.ctc,
+    offerType: item.offer_type,
     tags: item.tags,
     createdAt: item.created_at,
     batch: item.batches
@@ -379,6 +397,9 @@ export async function getExperiencesByCompany(companyId: string): Promise<Experi
     duration: item.duration,
     author: item.author,
     content: item.content,
+    selectionStatus: item.selection_status,
+    ctc: item.ctc,
+    offerType: item.offer_type,
     tags: item.tags,
     createdAt: item.created_at,
     batch: item.batches
@@ -428,6 +449,9 @@ export async function getExperiencesByBatchAndCompany(batchId: string, companyId
     duration: item.duration,
     author: item.author,
     content: item.content,
+    selectionStatus: item.selection_status,
+    ctc: item.ctc,
+    offerType: item.offer_type,
     tags: item.tags,
     createdAt: item.created_at,
     batch: item.batches
@@ -479,6 +503,9 @@ export async function getExperienceById(id: string): Promise<Experience | null> 
     duration: data.duration,
     author: data.author,
     content: data.content,
+    selectionStatus: data.selection_status,
+    ctc: data.ctc,
+    offerType: data.offer_type,
     tags: data.tags,
     createdAt: data.created_at,
     batch: data.batches

@@ -179,6 +179,31 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
                         <strong>Candidate:</strong> {experience.author}
                       </span>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <span>
+                        <strong>Status:</strong>
+                        <Badge
+                          variant={experience.selectionStatus === "selected" ? "default" : "secondary"}
+                          className="ml-1"
+                        >
+                          {experience.selectionStatus === "selected" ? "Selected" : "Not Selected"}
+                        </Badge>
+                      </span>
+                    </div>
+                    {experience.selectionStatus === "selected" && experience.ctc && (
+                      <div className="flex items-center gap-1">
+                        <span>
+                          <strong>CTC:</strong> ₹{experience.ctc} LPA
+                        </span>
+                      </div>
+                    )}
+                    {experience.selectionStatus === "selected" && experience.offerType && (
+                      <div className="flex items-center gap-1">
+                        <span>
+                          <strong>Offer Type:</strong> {experience.offerType}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {experience.duration && (
                     <div className="mt-2">

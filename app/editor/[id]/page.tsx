@@ -51,6 +51,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   const [authChecked, setAuthChecked] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
 
+  const [selectionStatus, setSelectionStatus] = useState("")
+  const [ctc, setCTC] = useState("")
+  const [offerType, setOfferType] = useState("")
+
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
   useEffect(() => {
@@ -71,6 +75,9 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           setRole(foundExperience.role)
           setDuration(foundExperience.duration || "")
           setAuthor(foundExperience.author)
+          setSelectionStatus(foundExperience.selectionStatus)
+          setCTC(foundExperience.ctc?.toString() || "")
+          setOfferType(foundExperience.offerType || "")
 
           // Set content in editor after a brief delay to ensure DOM is ready
           setTimeout(() => {
@@ -173,6 +180,9 @@ function twoSum(nums, target) {
       duration,
       author,
       content,
+      selectionStatus,
+      ctc: ctc ? Number.parseFloat(ctc) : null,
+      offerType,
     }
 
     try {
@@ -304,6 +314,28 @@ function twoSum(nums, target) {
                   placeholder="e.g., March 2024"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="selectionStatus">Selection Status</Label>
+                <Input
+                  id="selectionStatus"
+                  placeholder="e.g., Selected, Rejected"
+                  value={selectionStatus}
+                  onChange={(e) => setSelectionStatus(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ctc">CTC</Label>
+                <Input id="ctc" placeholder="e.g., 120000" value={ctc} onChange={(e) => setCTC(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="offerType">Offer Type</Label>
+                <Input
+                  id="offerType"
+                  placeholder="e.g., Full-time, Internship"
+                  value={offerType}
+                  onChange={(e) => setOfferType(e.target.value)}
                 />
               </div>
             </div>

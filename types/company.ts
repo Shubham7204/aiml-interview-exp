@@ -29,5 +29,8 @@ export interface Experience {
   author: string
   createdAt: string
   tags: string[]
+  selectionStatus: "selected" | "not-selected"
+  ctc?: number | null
+  offerType?: string | null
   batch?: Batch
 }
