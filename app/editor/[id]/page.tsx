@@ -21,6 +21,7 @@ import {
 
 // Other Component & Data Imports
 import { CompanySelector } from "../../../components/company-selector"
+import { BatchSelector } from "../../../components/batch-selector"
 import { companies } from "../../../data/companies"
 import { getExperienceById, updateExperience } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
@@ -89,6 +90,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
 
   const [experience, setExperience] = useState<Experience | null>(null)
   const [selectedCompany, setSelectedCompany] = useState("")
+  const [selectedBatch, setSelectedBatch] = useState("")
   const [title, setTitle] = useState("")
   const [role, setRole] = useState("")
   const [duration, setDuration] = useState("")
@@ -147,6 +149,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         if (foundExperience) {
           setExperience(foundExperience)
           setSelectedCompany(foundExperience.companyId)
+          setSelectedBatch(foundExperience.batchId)
           setTitle(foundExperience.title)
           setRole(foundExperience.role)
           setDuration(foundExperience.duration || "")
@@ -177,7 +180,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
 
   const handleSave = async () => {
     if (!editor || !experience) return
-    if (!selectedCompany || !title || !role || !author || !selectionStatus) {
+    if (!selectedCompany || !title || !role || !author || !selectionStatus || !selectedBatch) {
       alert("Please fill in all required fields")
       return
     }
@@ -189,8 +192,17 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     setIsSaving(true)
     try {
       await updateExperience({
-        ...experience, companyId: selectedCompany, title, role, duration, author, content, selectionStatus,
-        ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null, offerType: offerType || null,
+        ...experience,
+        companyId: selectedCompany,
+        batchId: selectedBatch,
+        title,
+        role,
+        duration,
+        author,
+        content,
+        selectionStatus,
+        ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null,
+        offerType: offerType || null,
       })
       alert("Experience updated successfully!")
       router.push(`/experience/${experience.id}`)
@@ -274,6 +286,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                       <span className="text-sm text-muted-foreground">Editing for {selectedCompanyData.name}</span>
                     </div>
                   )}
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="batch">Batch *</Label>
+                  <BatchSelector onBatchSelect={setSelectedBatch} selectedBatch={selectedBatch} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="selection-status">Selection Status *</Label>

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { CompanyCard } from "../components/company-card"
 import { companies } from "../data/companies"
 import { getExperiences, getBatches, getBatchByYear } from "../lib/database"
-import { Building2, Users, Search, GraduationCap } from "lucide-react"
+import { Building2, Users, Search, GraduationCap, Menu } from "lucide-react"
 import type { Company, Batch, Experience } from "../types/company"
 import { Footer } from "../components/footer"
 import { ThemeToggle } from "../components/theme-toggle"
@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import Image from "next/image"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState("companies") // 'companies' or 'people'
@@ -49,24 +50,24 @@ export default function HomePage() {
   }, [])
 
   useEffect(() => {
-    if (!selectedBatch) return
+      if (!selectedBatch) return
 
     // Filter experiences by batch
     const batchExperiences = allExperiences.filter((exp) => exp.batchId === selectedBatch.id)
 
     // Update company experience counts
-    const experienceCounts = batchExperiences.reduce(
-      (acc, exp) => {
-        acc[exp.companyId] = (acc[exp.companyId] || 0) + 1
-        return acc
-      },
-      {} as Record<string, number>,
-    )
+        const experienceCounts = batchExperiences.reduce(
+          (acc, exp) => {
+            acc[exp.companyId] = (acc[exp.companyId] || 0) + 1
+            return acc
+          },
+          {} as Record<string, number>,
+        )
 
-    const updatedCompanies = companies.map((company) => ({
-      ...company,
-      experienceCount: experienceCounts[company.id] || 0,
-    }))
+        const updatedCompanies = companies.map((company) => ({
+          ...company,
+          experienceCount: experienceCounts[company.id] || 0,
+        }))
 
     // Filter companies and people based on search term
     const lowercasedFilter = searchTerm.toLowerCase()
@@ -107,19 +108,65 @@ export default function HomePage() {
       <header className="bg-card shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="flex items-center gap-2">
-              <img src="/djsce-logo.png" alt="DJSCE Logo" className="w-8 h-8 object-contain" />
-              <span className="font-medium text-foreground">AIML Placement Experiences</span>
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/djsce-logo.png" alt="DJSCE Logo" className="h-8 w-auto" />
+              <span className="font-semibold text-lg text-foreground hidden sm:block">
+                AIML Placement Experiences
+              </span>
             </Link>
-            <div className="flex items-center gap-4">
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center gap-6">
               <Link
                 href="/aiml-25"
-                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
                 <GraduationCap className="w-4 h-4" />
-                AIML 25 (PDF)
+                AIML-25 (PDF)
+              </Link>
+              <Link
+                href="/companies"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Building2 className="w-4 h-4" />
+                All Companies
               </Link>
               <ThemeToggle />
+            </nav>
+
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center">
+              <ThemeToggle />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="ml-2">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+                  <nav className="flex flex-col gap-6 pt-8">
+                    <Link href="/" className="flex items-center gap-2 mb-4">
+                      <img src="/djsce-logo.png" alt="DJSCE Logo" className="h-8 w-auto" />
+                      <span className="font-semibold">Home</span>
+                    </Link>
+                    <Link
+                      href="/aiml-25"
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      <GraduationCap className="w-5 h-5 mr-2" />
+                      AIML-25
+                    </Link>
+                    <Link
+                      href="/companies"
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      <Building2 className="w-5 h-5 mr-2" />
+                      All Companies
+                    </Link>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
         </div>
@@ -160,26 +207,26 @@ export default function HomePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 w-full"
             />
-          </div>
+            </div>
           <div className="w-full md:w-48">
-            <Select value={selectedBatch?.id || ""} onValueChange={handleBatchChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a batch" />
-              </SelectTrigger>
-              <SelectContent>
-                {batches.map((batch) => (
-                  <SelectItem key={batch.id} value={batch.id}>
-                    {batch.name} ({batch.year})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <Select value={selectedBatch?.id || ""} onValueChange={handleBatchChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id}>
+                      {batch.name} ({batch.year})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
           </div>
         </div>
 
         {viewMode === "companies" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {companiesWithExperiences
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {companiesWithExperiences
               .filter((c) => c.experienceCount > 0)
               .map((company) => {
                 const batchExperiences = allExperiences.filter((exp) => exp.batchId === selectedBatch?.id)
@@ -243,7 +290,7 @@ export default function HomePage() {
             ) : (
               <div className="text-center py-12 col-span-full">
                 <p className="text-muted-foreground">No experiences found for "{searchTerm}" in this batch.</p>
-              </div>
+            </div>
             )}
           </div>
         )}

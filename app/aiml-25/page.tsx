@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, ExternalLink, Menu, X } from "lucide-react"
+import { Search, ExternalLink, Menu, Building2, GraduationCap } from "lucide-react"
 import Link from "next/link"
 import { Footer } from "../../components/footer"
 import { ThemeToggle } from "../../components/theme-toggle"
 import { aiml25Placements } from "../../data/aiml25-placements"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 export default function AIML25Page() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -31,62 +32,73 @@ export default function AIML25Page() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="bg-card shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo and Title */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <img
-                src="/djsce-logo.png"
-                alt="DJSCE Logo"
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain flex-shrink-0"
-              />
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">AIML 25 Placement Experiences</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Department of AIML, DJSCE</p>
+            <Link href="/" className="flex items-center gap-3">
+              <img src="/djsce-logo.png" alt="DJSCE Logo" className="h-8 w-auto" />
+              <div className="hidden sm:block">
+                <p className="font-semibold text-lg text-foreground">AIML Placement Experiences</p>
+                <p className="text-xs text-muted-foreground -mt-1">Batch of 2025</p>
               </div>
-            </div>
+            </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-4">
+            <nav className="hidden md:flex items-center gap-6">
               <Link
                 href="/"
-                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
-                AIML 26 Experiences
+                <GraduationCap className="w-4 h-4" />
+                AIML-26 Experiences
+              </Link>
+              <Link
+                href="/companies"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                <Building2 className="w-4 h-4" />
+                All Companies
               </Link>
               <ThemeToggle />
-            </div>
+            </nav>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <Button variant="ghost" size="sm" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2">
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center">
+              <ThemeToggle />
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="ml-2">
+                    <Menu className="h-5 w-5" />
+                    <span className="sr-only">Open menu</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[250px] sm:w-[300px]">
+                  <nav className="flex flex-col gap-6 pt-8">
+                     <Link href="/" className="flex items-center gap-2 mb-4">
+                      <img src="/djsce-logo.png" alt="DJSCE Logo" className="h-8 w-auto" />
+                      <span className="font-semibold">Home</span>
+                    </Link>
+                    <Link
+                      href="/"
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      <GraduationCap className="w-5 h-5 mr-2" />
+                      AIML-26 Experiences
+                    </Link>
+                    <Link
+                      href="/companies"
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      <Building2 className="w-5 h-5 mr-2" />
+                      All Companies
+                    </Link>
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
           </div>
-
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-border py-3">
-              <div className="flex items-center justify-between">
-                <Link
-                  href="/"
-                  className="block text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium px-3 py-2 rounded-md hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  AIML 26 Experiences
-                </Link>
-                <div className="pr-3">
-                  <ThemeToggle />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </header>
-
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <div className="space-y-6">
           {/* Page Title */}
