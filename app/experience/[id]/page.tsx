@@ -194,14 +194,14 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
                         </Badge>
                       </span>
                     </div>
-                    {experience.selectionStatus === "selected" && experience.ctc && (
+                    {experience.ctc && (
                       <div className="flex items-center gap-1">
                         <span>
                           <strong>CTC:</strong> ₹{experience.ctc % 1 === 0 ? experience.ctc.toFixed(0) : experience.ctc.toFixed(1)} LPA
                         </span>
                       </div>
                     )}
-                    {experience.selectionStatus === "selected" && experience.offerType && (
+                    {experience.offerType && (
                       <div className="flex items-center gap-1">
                         <span>
                           <strong>Offer Type:</strong> {experience.offerType}
