@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,17 +19,18 @@ import {
 import { getExperienceById, deleteExperience } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
 import { companies } from "../../../data/companies"
+import { ThemeToggle } from "../../../components/theme-toggle"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, User, Briefcase, Edit, Trash2 } from "lucide-react"
 import type { Experience } from "../../../types/company"
 
 interface ExperiencePageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default function ExperiencePage({ params }: ExperiencePageProps) {
-  const { id } = params
+  const { id } = React.use(params)
   const router = useRouter()
   const [experience, setExperience] = useState<Experience | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,10 +71,10 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Loading experience...</div>
-          <p className="text-gray-500 mt-2">Please wait while we fetch the experience details.</p>
+          <div className="text-xl font-medium text-foreground">Loading experience...</div>
+          <p className="text-muted-foreground mt-2">Please wait while we fetch the experience details.</p>
         </div>
       </div>
     )
@@ -81,10 +82,10 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
 
   if (!experience) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Experience not found</div>
-          <p className="text-gray-500 mt-2">The experience you're looking for doesn't exist.</p>
+          <div className="text-xl font-medium text-foreground">Experience not found</div>
+          <p className="text-muted-foreground mt-2">The experience you're looking for doesn't exist.</p>
           <Button asChild className="mt-4">
             <Link href="/">Go Home</Link>
           </Button>
@@ -96,9 +97,9 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
   const company = companies.find((c) => c.id === experience.companyId)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Button variant="ghost" asChild>
@@ -107,43 +108,46 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
                 Back to {company?.name || "Home"}
               </Link>
             </Button>
-            {isAdmin && (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/editor/${experience.id}`}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Link>
-                </Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Experience</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Are you sure you want to delete this interview experience? This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-                        {isDeleting ? "Deleting..." : "Delete"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link href={`/editor/${experience.id}`}>
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Experience</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this interview experience? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                          {isDeleting ? "Deleting..." : "Delete"}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardContent className="p-8">
             {/* Experience Header */}
@@ -159,8 +163,8 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
                   />
                 )}
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-3">{experience.title}</h1>
-                  <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <h1 className="text-3xl font-bold text-foreground mb-3">{experience.title}</h1>
+                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <Briefcase className="w-4 h-4" />
                       <span>
@@ -193,7 +197,7 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
                     {experience.selectionStatus === "selected" && experience.ctc && (
                       <div className="flex items-center gap-1">
                         <span>
-                          <strong>CTC:</strong> ₹{experience.ctc} LPA
+                          <strong>CTC:</strong> ₹{experience.ctc % 1 === 0 ? experience.ctc.toFixed(0) : experience.ctc.toFixed(1)} LPA
                         </span>
                       </div>
                     )}
@@ -216,7 +220,7 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
 
             {/* Experience Content */}
             <div
-              className="prose max-w-none"
+              className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none dark:prose-invert mx-auto"
               style={{
                 fontSize: "16px",
                 lineHeight: "1.6",

@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { useEditor, EditorContent } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import Underline from "@tiptap/extension-underline"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,24 +14,13 @@ import { CompanySelector } from "../../components/company-selector"
 import { companies } from "../../data/companies"
 import { saveExperience, getBatchByYear } from "../../lib/database"
 import { isAuthenticated } from "../../lib/auth"
-import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  List,
-  ListOrdered,
-  Code,
-  ImageIcon,
-  Save,
-  Eye,
-  FileText,
-  Type,
-  ArrowLeft,
-} from "lucide-react"
+import { ThemeToggle } from "../../components/theme-toggle"
+import { Save, Eye, FileText, Type, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { BatchSelector } from "../../components/batch-selector"
+import RichTextEditor from "@/rich-text-editor"
+import DOMPurify from "dompurify"
 
 export default function EditorPage() {
   const searchParams = useSearchParams()
@@ -44,13 +35,73 @@ export default function EditorPage() {
   const [isPreview, setIsPreview] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
-  const editorRef = useRef<HTMLDivElement>(null)
   const [selectedBatch, setSelectedBatch] = useState("")
-  const [selectionStatus, setSelectionStatus] = useState("")
+  const [selectionStatus, setSelectionStatus] = useState<"selected" | "not-selected" | "">("")
   const [ctc, setCTC] = useState("")
   const [offerType, setOfferType] = useState("")
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      Underline,
+    ],
+    content: `
+      <h2 style="font-size: 24px; font-weight: bold; margin: 20px 0 12px 0; color: #1f2937;">Overview</h2>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">I had the opportunity to interview for the Software Development Engineer (SDE) position at [Company Name]. The process consisted of an Online Assessment followed by two interview rounds.</p>
+      
+      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Online Assessment - Date</h3>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">The Online Assessment was conducted on [Date] with a duration of [Duration]. It consisted of:</p>
+      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
+        <li>Aptitude questions</li>
+        <li>DSA questions</li>
+        <li>SQL questions</li>
+      </ul>
+      
+      <h4 style="font-size: 18px; font-weight: bold; margin: 14px 0 6px 0; color: #4b5563;">Aptitude Section</h4>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Describe your experience with the aptitude section...</p>
+      
+      <h4 style="font-size: 18px; font-weight: bold; margin: 14px 0 6px 0; color: #4b5563;">DSA Section</h4>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Question 1:</strong> [Problem Title]</p>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Problem description...</p>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Status:</strong> Successfully solved</p>
+      
+      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Technical Interview Round</h3>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Duration:</strong> [Duration]</p>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">The interview started with a brief introduction and resume discussion, then moved to technical questions.</p>
+      
+      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Final Results</h3>
+      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Share the outcome and timeline...</p>
+      
+      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Key Takeaways</h3>
+      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
+        <li>Preparation is crucial - Strong DSA and SQL knowledge is essential</li>
+        <li>Think out loud - Explain your approach clearly during interviews</li>
+        <li>Time management - Practice solving problems within time limits</li>
+      </ul>
+      
+      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Advice for Future Candidates</h3>
+      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
+        <li>Focus on problem-solving and optimization</li>
+        <li>Practice coding on paper/whiteboard</li>
+        <li>Stay calm and communicate your thought process clearly</li>
+      </ul>
+    `,
+    editorProps: {
+      attributes: {
+        class: "min-h-[500px] p-6 focus:outline-none text-base leading-relaxed prose max-w-none",
+      },
+      transformPastedHTML(html) {
+        return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } })
+      },
+    },
+    immediatelyRender: false, // Fix SSR hydration mismatch
+  })
 
   useEffect(() => {
     // Check authentication
@@ -77,72 +128,14 @@ export default function EditorPage() {
     setDefaultBatch()
   }, [router, preselectedCompany])
 
-  const executeCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    editorRef.current?.focus()
-  }, [])
-
-  const insertHTML = useCallback((html: string) => {
-    const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      range.deleteContents()
-      const div = document.createElement("div")
-      div.innerHTML = html
-      const fragment = document.createDocumentFragment()
-      while (div.firstChild) {
-        fragment.appendChild(div.firstChild)
-      }
-      range.insertNode(fragment)
-    }
-  }, [])
-
-  const insertTable = () => {
-    const tableHTML = `
-      <table style="border-collapse: collapse; width: 100%; margin: 10px 0;">
-        <tr>
-          <td style="border: 1px solid #ccc; padding: 8px;">Round</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Type</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Duration</td>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #ccc; padding: 8px;">Round 1</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Online Test</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">90 minutes</td>
-        </tr>
-      </table>
-    `
-    insertHTML(tableHTML)
-  }
-
-  const insertCodeBlock = () => {
-    const codeHTML = `
-      <pre style="background-color: #f4f4f4; padding: 12px; border-radius: 4px; margin: 10px 0; overflow-x: auto;">
-        <code>// Sample coding question solution
-function twoSum(nums, target) {
-    const map = new Map();
-    for (let i = 0; i < nums.length; i++) {
-        const complement = target - nums[i];
-        if (map.has(complement)) {
-            return [map.get(complement), i];
-        }
-        map.set(nums[i], i);
-    }
-    return [];
-}</code>
-      </pre>
-    `
-    insertHTML(codeHTML)
-  }
-
   const handleSave = async () => {
     if (!selectedBatch || !selectedCompany || !title || !role || !author || !selectionStatus) {
       alert("Please fill in all required fields (Batch, Company, Title, Role, Candidate Name, Selection Status)")
       return
     }
 
-    const content = editorRef.current?.innerHTML || ""
-    if (!content.trim()) {
+    const content = editor?.getHTML() || ""
+    if (!content.trim() || content === "<p></p>") {
       alert("Please write some content for your experience")
       return
     }
@@ -150,7 +143,7 @@ function twoSum(nums, target) {
     setIsSaving(true)
 
     try {
-      const savedExperience = await saveExperience({
+      await saveExperience({
         batchId: selectedBatch,
         companyId: selectedCompany,
         title,
@@ -159,9 +152,9 @@ function twoSum(nums, target) {
         author,
         content,
         selectionStatus,
-        ctc: selectionStatus === "selected" ? Number.parseFloat(ctc) || null : null,
-        offerType: selectionStatus === "selected" ? offerType : null,
-        tags: ["Technical Round", "HR Round"], // You can make this dynamic later
+        ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null,
+        offerType: offerType || null,
+        tags: [], // No default tags
       })
 
       alert("Experience saved successfully!")
@@ -176,18 +169,18 @@ function twoSum(nums, target) {
 
   if (!authChecked) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Checking authentication...</div>
+          <div className="text-xl font-medium text-foreground">Checking authentication...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Button variant="ghost" asChild>
@@ -209,318 +202,189 @@ function twoSum(nums, target) {
                 <Save className="w-4 h-4 mr-2" />
                 {isSaving ? "Saving..." : "Save Experience"}
               </Button>
+              <ThemeToggle />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Experience Details Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Share Your Interview Experience
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="company">Company *</Label>
-                <CompanySelector onCompanySelect={setSelectedCompany} selectedCompany={selectedCompany} />
-                {selectedCompanyData && (
-                  <div className="flex items-center gap-2 mt-2 p-2 bg-gray-50 rounded">
-                    <Image
-                      src={selectedCompanyData.logo || "/placeholder.svg"}
-                      alt={`${selectedCompanyData.name} logo`}
-                      width={24}
-                      height={24}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-600">Writing for {selectedCompanyData.name}</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="batch">Batch *</Label>
-                <BatchSelector onBatchSelect={setSelectedBatch} selectedBatch={selectedBatch} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="author">Candidate Name *</Label>
-                <Input
-                  id="author"
-                  placeholder="e.g., John Doe"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role Applied For *</Label>
-                <Input
-                  id="role"
-                  placeholder="e.g., Software Engineer, Data Scientist"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration">Interview Period</Label>
-                <Input
-                  id="duration"
-                  placeholder="e.g., March 2024"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="selection-status">Selection Status *</Label>
-                <Select value={selectionStatus} onValueChange={setSelectionStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="selected">Selected</SelectItem>
-                    <SelectItem value="not-selected">Not Selected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ctc">CTC (in LPA)</Label>
-                <Input
-                  id="ctc"
-                  type="number"
-                  step="0.1"
-                  placeholder="e.g., 12.5"
-                  value={ctc}
-                  onChange={(e) => setCTC(e.target.value)}
-                  disabled={selectionStatus !== "selected"}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="offer-type">Offer Type</Label>
-                <Input
-                  id="offer-type"
-                  placeholder="e.g., Full-time, Internship, PPO"
-                  value={offerType}
-                  onChange={(e) => setOfferType(e.target.value)}
-                  disabled={selectionStatus !== "selected"}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Experience Title *</Label>
-              <Input
-                id="title"
-                placeholder="e.g., My Software Engineer Interview Experience at Google"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rich Text Editor */}
-        <Card>
-          <CardContent className="p-0">
-            {!isPreview && (
-              <div className="border rounded-lg">
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50">
-                  {/* Text Formatting */}
-                  <div className="flex items-center gap-1">
-                    <Select onValueChange={(value) => executeCommand("formatBlock", value)}>
-                      <SelectTrigger className="w-32 h-8">
-                        <SelectValue placeholder="Format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="div">Normal</SelectItem>
-                        <SelectItem value="h1">Heading 1</SelectItem>
-                        <SelectItem value="h2">Heading 2</SelectItem>
-                        <SelectItem value="h3">Heading 3</SelectItem>
-                        <SelectItem value="h4">Heading 4</SelectItem>
-                        <SelectItem value="p">Paragraph</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Separator orientation="vertical" className="h-6" />
-                  </div>
-
-                  {/* Basic Formatting */}
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => executeCommand("bold")} className="h-8 w-8 p-0">
-                      <Bold className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => executeCommand("italic")} className="h-8 w-8 p-0">
-                      <Italic className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("underline")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Underline className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("strikeThrough")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Strikethrough className="w-4 h-4" />
-                    </Button>
-                    <Separator orientation="vertical" className="h-6" />
-                  </div>
-
-                  {/* Lists and Elements */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("insertUnorderedList")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("insertOrderedList")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <ListOrdered className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={insertTable} className="h-8 w-8 p-0">
-                      <ImageIcon className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={insertCodeBlock} className="h-8 w-8 p-0">
-                      <Code className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Editor */}
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  className="min-h-[500px] p-6 focus:outline-none text-base leading-relaxed"
-                  style={{
-                    lineHeight: "1.6",
-                    fontSize: "16px",
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: `
-                      <h2 style="font-size: 24px; font-weight: bold; margin: 20px 0 12px 0; color: #1f2937;">Overview</h2>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">I had the opportunity to interview for the Software Development Engineer (SDE) position at [Company Name]. The process consisted of an Online Assessment followed by two interview rounds.</p>
-                      
-                      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Online Assessment - Date</h3>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">The Online Assessment was conducted on [Date] with a duration of [Duration]. It consisted of:</p>
-                      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
-                        <li>Aptitude questions</li>
-                        <li>DSA questions</li>
-                        <li>SQL questions</li>
-                      </ul>
-                      
-                      <h4 style="font-size: 18px; font-weight: bold; margin: 14px 0 6px 0; color: #4b5563;">Aptitude Section</h4>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Describe your experience with the aptitude section...</p>
-                      
-                      <h4 style="font-size: 18px; font-weight: bold; margin: 14px 0 6px 0; color: #4b5563;">DSA Section</h4>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Question 1:</strong> [Problem Title]</p>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Problem description...</p>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Status:</strong> Successfully solved</p>
-                      
-                      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Technical Interview Round</h3>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;"><strong>Duration:</strong> [Duration]</p>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">The interview started with a brief introduction and resume discussion, then moved to technical questions.</p>
-                      
-                      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Final Results</h3>
-                      <p style="font-size: 16px; margin: 8px 0; line-height: 1.6;">Share the outcome and timeline...</p>
-                      
-                      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Key Takeaways</h3>
-                      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
-                        <li>Preparation is crucial - Strong DSA and SQL knowledge is essential</li>
-                        <li>Think out loud - Explain your approach clearly during interviews</li>
-                        <li>Time management - Practice solving problems within time limits</li>
-                      </ul>
-                      
-                      <h3 style="font-size: 20px; font-weight: bold; margin: 16px 0 8px 0; color: #374151;">Advice for Future Candidates</h3>
-                      <ul style="font-size: 16px; margin: 8px 0; padding-left: 20px;">
-                        <li>Focus on problem-solving and optimization</li>
-                        <li>Practice coding on paper/whiteboard</li>
-                        <li>Stay calm and communicate your thought process clearly</li>
-                      </ul>
-                    `,
-                  }}
-                />
-              </div>
-            )}
-
-            {isPreview && (
-              <div className="p-6 bg-white">
-                <div className="mb-6 pb-4 border-b">
-                  <div className="flex items-start gap-4 mb-4">
-                    {selectedCompanyData && (
+      <div className="flex justify-center min-h-screen bg-background">
+        <main className="w-full max-w-4xl px-6 py-8 space-y-6">
+          {/* Experience Details Form */}
+          <Card>
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center justify-center gap-2">
+                <FileText className="w-5 h-5" />
+                Share Your Interview Experience
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company *</Label>
+                  <CompanySelector onCompanySelect={setSelectedCompany} selectedCompany={selectedCompany} />
+                  {selectedCompanyData && (
+                    <div className="flex items-center gap-2 mt-2 p-2 bg-muted rounded">
                       <Image
                         src={selectedCompanyData.logo || "/placeholder.svg"}
                         alt={`${selectedCompanyData.name} logo`}
-                        width={48}
-                        height={48}
+                        width={24}
+                        height={24}
                         className="rounded"
                       />
-                    )}
-                    <div>
-                      <h1 className="text-2xl font-bold mb-2">{title || "Interview Experience Title"}</h1>
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                        <span>
-                          <strong>Company:</strong> {selectedCompanyData?.name || "Select Company"}
-                        </span>
-                        <span>
-                          <strong>Role:</strong> {role || "Role Applied For"}
-                        </span>
-                        <span>
-                          <strong>Candidate:</strong> {author || "Candidate Name"}
-                        </span>
-                        {duration && (
+                      <span className="text-sm text-muted-foreground">Writing for {selectedCompanyData.name}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="batch">Batch *</Label>
+                  <BatchSelector onBatchSelect={setSelectedBatch} selectedBatch={selectedBatch} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="author">Candidate Name *</Label>
+                  <Input
+                    id="author"
+                    placeholder="e.g., John Doe"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role Applied For *</Label>
+                  <Input
+                    id="role"
+                    placeholder="e.g., Software Engineer, Data Scientist"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Interview Period</Label>
+                  <Input
+                    id="duration"
+                    placeholder="e.g., March 2024"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="selection-status">Selection Status *</Label>
+                  <Select value={selectionStatus} onValueChange={(value) => setSelectionStatus(value as "selected" | "not-selected")}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="selected">Selected</SelectItem>
+                      <SelectItem value="not-selected">Not Selected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ctc">CTC (in LPA)</Label>
+                  <Input
+                    id="ctc"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g., 12.5"
+                    value={ctc}
+                    onChange={(e) => setCTC(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="offer-type">Offer Type</Label>
+                  <Input
+                    id="offer-type"
+                    placeholder="e.g., Full-time, Internship, PPO"
+                    value={offerType}
+                    onChange={(e) => setOfferType(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">Experience Title *</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g., My Software Engineer Interview Experience at Google"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Rich Text Editor */}
+          <Card>
+            <CardContent className="p-0">
+              {!isPreview && <RichTextEditor editor={editor} />}
+
+              {isPreview && (
+                <div className="p-6 bg-card">
+                  <div className="mb-6 pb-4 border-b">
+                    <div className="flex items-start gap-4 mb-4">
+                      {selectedCompanyData && (
+                        <Image
+                          src={selectedCompanyData.logo || "/placeholder.svg"}
+                          alt={`${selectedCompanyData.name} logo`}
+                          width={48}
+                          height={48}
+                          className="rounded"
+                        />
+                      )}
+                      <div>
+                        <h1 className="text-2xl font-bold mb-2 text-foreground">{title || "Interview Experience Title"}</h1>
+                        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <span>
-                            <strong>Period:</strong> {duration}
+                            <strong>Company:</strong> {selectedCompanyData?.name || "Select Company"}
                           </span>
-                        )}
-                        <span>
-                          <strong>Status:</strong>{" "}
-                          {selectionStatus === "selected"
-                            ? "Selected"
-                            : selectionStatus === "not-selected"
-                              ? "Not Selected"
-                              : "Not specified"}
-                        </span>
-                        {selectionStatus === "selected" && ctc && (
                           <span>
-                            <strong>CTC:</strong> {ctc} LPA
+                            <strong>Role:</strong> {role || "Role Applied For"}
                           </span>
-                        )}
-                        {selectionStatus === "selected" && offerType && (
                           <span>
-                            <strong>Offer Type:</strong> {offerType}
+                            <strong>Candidate:</strong> {author || "Candidate Name"}
                           </span>
-                        )}
+                          {duration && (
+                            <span>
+                              <strong>Period:</strong> {duration}
+                            </span>
+                          )}
+                          <span>
+                            <strong>Status:</strong>{" "}
+                            {selectionStatus === "selected"
+                              ? "Selected"
+                              : selectionStatus === "not-selected"
+                                ? "Not Selected"
+                                : "Not specified"}
+                          </span>
+                          {selectionStatus === "selected" && ctc && (
+                            <span>
+                              <strong>CTC:</strong> {ctc} LPA
+                            </span>
+                          )}
+                          {selectionStatus === "selected" && offerType && (
+                            <span>
+                              <strong>Offer Type:</strong> {offerType}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div
+                    className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none dark:prose-invert"
+                    style={{
+                      fontSize: "16px",
+                      lineHeight: "1.6",
+                    }}
+                    dangerouslySetInnerHTML={{
+                      __html: editor?.getHTML() || "Start writing your experience...",
+                    }}
+                  />
                 </div>
-                <div
-                  className="prose max-w-none"
-                  style={{
-                    fontSize: "16px",
-                    lineHeight: "1.6",
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: editorRef.current?.innerHTML || "Start writing your experience...",
-                  }}
-                />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+              )}
+            </CardContent>
+          </Card>
+        </main>
+      </div>
     </div>
   )
 }

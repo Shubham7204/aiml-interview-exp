@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -8,17 +8,18 @@ import { Badge } from "@/components/ui/badge"
 import { companies } from "../../../../../data/companies"
 import { getExperiencesByBatchAndCompany, getBatchById } from "../../../../../lib/database"
 import { isAuthenticated } from "../../../../../lib/auth"
+import { ThemeToggle } from "../../../../../components/theme-toggle"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink, MapPin, Users, PlusCircle } from "lucide-react"
 import type { Experience, Batch } from "../../../../../types/company"
 
-interface BatchCompanyPageProps {
-  params: { batchId: string; companyId: string }
+interface BatchCompanyClientPageProps {
+  batchId: string
+  companyId: string
 }
 
-export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
-  const { batchId, companyId } = params
+function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPageProps) {
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [batch, setBatch] = useState<Batch | null>(null)
   const [loading, setLoading] = useState(true)
@@ -54,19 +55,19 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Loading experiences...</div>
-          <p className="text-gray-500 mt-2">Please wait while we fetch {company.name} experiences.</p>
+          <div className="text-xl font-medium text-foreground">Loading experiences...</div>
+          <p className="text-muted-foreground mt-2">Please wait while we fetch {company.name} experiences.</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Button variant="ghost" asChild>
@@ -75,14 +76,17 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
                 Back to Home
               </Link>
             </Button>
-            {isAdmin && (
-              <Button asChild>
-                <Link href={`/editor?batch=${batchId}&company=${companyId}`}>
-                  <PlusCircle className="w-4 h-4 mr-2" />
-                  Add Experience
-                </Link>
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Button asChild>
+                  <Link href={`/editor?batch=${batchId}&company=${companyId}`}>
+                    <PlusCircle className="w-4 h-4 mr-2" />
+                    Add Experience
+                  </Link>
+                </Button>
+              )}
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -92,7 +96,7 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
         <Card className="mb-8">
           <CardContent className="p-8">
             <div className="flex items-start gap-6">
-              <div className="w-24 h-24 bg-white rounded-xl p-3 shadow-sm border">
+              <div className="w-24 h-24 bg-background rounded-xl p-3 shadow-sm border">
                 <Image
                   src={company.logo || "/placeholder.svg"}
                   alt={`${company.name} logo`}
@@ -102,8 +106,8 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
                 />
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{company.name}</h1>
-                <p className="text-lg text-gray-600 mb-4">{company.description}</p>
+                <h1 className="text-3xl font-bold text-foreground mb-2">{company.name}</h1>
+                <p className="text-lg text-muted-foreground mb-4">{company.description}</p>
                 <div className="flex flex-wrap gap-4 mb-4">
                   <Badge variant="secondary" className="text-sm">
                     <MapPin className="w-4 h-4 mr-1" />
@@ -136,10 +140,10 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
         {experiences.length > 0 ? (
           <div className="space-y-6">
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
                 {company.name} Interview Experiences ({experiences.length})
               </h2>
-              <p className="text-gray-600">Real interview experiences shared by {batch?.name || "AIML"} students</p>
+              <p className="text-muted-foreground">Real interview experiences shared by {batch?.name || "AIML"} students</p>
             </div>
 
             {/* Experience Cards */}
@@ -150,7 +154,7 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg mb-2">{experience.title}</CardTitle>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           <span>Role: {experience.role}</span>
                           <span>•</span>
                           <span>By {experience.author}</span>
@@ -163,14 +167,14 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2 mb-3">
-                      {experience.tags?.map((tag) => (
+                      {experience.tags?.filter(tag => tag !== "Technical Round" && tag !== "HR Round").map((tag) => (
                         <Badge key={tag} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
                       ))}
                     </div>
                     <div
-                      className="text-sm text-gray-600 line-clamp-3"
+                      className="text-sm text-muted-foreground line-clamp-3"
                       dangerouslySetInnerHTML={{
                         __html: experience.content.replace(/<[^>]*>/g, "").substring(0, 200) + "...",
                       }}
@@ -182,10 +186,10 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
           </div>
         ) : (
           <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <h2 className="text-2xl font-bold text-foreground mb-4">
               {company.name} Experiences - {batch?.name || "AIML"}
             </h2>
-            <p className="text-gray-600 mb-8">No experiences shared yet for this company and batch</p>
+            <p className="text-muted-foreground mb-8">No experiences shared yet for this company and batch</p>
             {isAdmin && (
               <Button asChild>
                 <Link href={`/editor?batch=${batchId}&company=${companyId}`}>
@@ -199,4 +203,13 @@ export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
       </main>
     </div>
   )
+}
+
+interface BatchCompanyPageProps {
+  params: Promise<{ batchId: string; companyId: string }>
+}
+
+export default function BatchCompanyPage({ params }: BatchCompanyPageProps) {
+  const { batchId, companyId } = React.use(params)
+  return <BatchCompanyClientPage batchId={batchId} companyId={companyId} />
 }

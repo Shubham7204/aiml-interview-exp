@@ -1,42 +1,90 @@
 "use client"
 
-import { useState, useRef, useCallback, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useEditor, EditorContent, type Editor } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import Underline from "@tiptap/extension-underline"
+import DOMPurify from "dompurify"
+
+// UI and Icon Imports
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Toggle } from "@/components/ui/toggle"
+import {
+  Bold, Strikethrough, Italic, List, ListOrdered, Heading1, Heading2,
+  Heading3, Underline as UnderlineIcon, Quote, Save, Eye, FileText, Type, ArrowLeft,
+} from "lucide-react"
+
+// Other Component & Data Imports
 import { CompanySelector } from "../../../components/company-selector"
 import { companies } from "../../../data/companies"
 import { getExperienceById, updateExperience } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
-import {
-  Bold,
-  Italic,
-  Underline,
-  Strikethrough,
-  List,
-  ListOrdered,
-  Code,
-  ImageIcon,
-  Save,
-  Eye,
-  FileText,
-  Type,
-  ArrowLeft,
-} from "lucide-react"
+import { ThemeToggle } from "../../../components/theme-toggle"
+import type { Experience } from "../../../types/company"
 import Link from "next/link"
 import Image from "next/image"
-import type { Experience } from "../../../types/company"
+
+
+// ====================================================================================
+// START: RICH TEXT EDITOR TOOLBAR COMPONENT (Defined in the same file)
+// ====================================================================================
+
+const MenuBar = ({ editor }: { editor: Editor | null }) => {
+  if (!editor) {
+    return null
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 border-b p-2 bg-muted/50">
+      <Toggle size="sm" pressed={editor.isActive("heading", { level: 1 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}>
+        <Heading1 className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("heading", { level: 2 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+        <Heading2 className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("heading", { level: 3 })} onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+        <Heading3 className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("bold")} onPressedChange={() => editor.chain().focus().toggleBold().run()}>
+        <Bold className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("italic")} onPressedChange={() => editor.chain().focus().toggleItalic().run()}>
+        <Italic className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("underline")} onPressedChange={() => editor.chain().focus().toggleUnderline().run()}>
+        <UnderlineIcon className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("strike")} onPressedChange={() => editor.chain().focus().toggleStrike().run()}>
+        <Strikethrough className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("bulletList")} onPressedChange={() => editor.chain().focus().toggleBulletList().run()}>
+        <List className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={editor.isActive("orderedList")} onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}>
+        <ListOrdered className="h-4 w-4" />
+      </Toggle>
+       <Toggle size="sm" pressed={editor.isActive("blockquote")} onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}>
+        <Quote className="h-4 w-4" />
+      </Toggle>
+    </div>
+  )
+}
+// ====================================================================================
+// END: RICH TEXT EDITOR TOOLBAR COMPONENT
+// ====================================================================================
+
 
 interface EditExperiencePageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default function EditExperiencePage({ params }: EditExperiencePageProps) {
-  const { id } = params
+  const { id } = React.use(params)
   const router = useRouter()
 
   const [experience, setExperience] = useState<Experience | null>(null)
@@ -45,20 +93,48 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   const [role, setRole] = useState("")
   const [duration, setDuration] = useState("")
   const [author, setAuthor] = useState("")
-  const [isPreview, setIsPreview] = useState(false)
+  const [isPreview, setIsPreview] = useState(false) // Default to edit mode
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [authChecked, setAuthChecked] = useState(false)
-  const editorRef = useRef<HTMLDivElement>(null)
-
-  const [selectionStatus, setSelectionStatus] = useState("")
+  const [selectionStatus, setSelectionStatus] = useState<Experience["selectionStatus"] | "">("")
   const [ctc, setCTC] = useState("")
   const [offerType, setOfferType] = useState("")
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3], // Allow H1, H2, H3
+        },
+      }),
+      Underline,
+    ],
+    editorProps: {
+      attributes: {
+        // This is CRITICAL. It applies Tailwind's typography styles.
+        class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl p-4 focus:outline-none min-h-[500px] max-w-none w-full dark:prose-invert",
+      },
+      // Sanitize pasted HTML. Tiptap intelligently handles markdown-like text pasting automatically.
+      transformPastedHTML(html) {
+        return DOMPurify.sanitize(html, {
+          USE_PROFILES: { html: true },
+          ALLOWED_TAGS: [
+            "p", "h1", "h2", "h3", "strong", "em", "u", "ul", "ol", "li",
+            "blockquote", "code", "br", "a", "strike"
+          ],
+          ALLOWED_ATTR: ['href', 'target', 'rel'],
+        })
+      },
+    },
+    content: "", // Content is set in useEffect
+    immediatelyRender: false, // Fix SSR hydration mismatch
+  })
+
+  // Load experience data
   useEffect(() => {
-    // Check authentication
     if (!isAuthenticated()) {
       router.push("/login")
       return
@@ -76,17 +152,9 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           setDuration(foundExperience.duration || "")
           setAuthor(foundExperience.author)
           setSelectionStatus(foundExperience.selectionStatus)
-          setCTC(foundExperience.ctc?.toString() || "")
+          setCTC(foundExperience.ctc ? String(foundExperience.ctc) : "")
           setOfferType(foundExperience.offerType || "")
-
-          // Set content in editor after a brief delay to ensure DOM is ready
-          setTimeout(() => {
-            if (editorRef.current) {
-              editorRef.current.innerHTML = foundExperience.content
-            }
-          }, 100)
         } else {
-          // Experience not found, redirect to admin
           router.push("/admin")
         }
       } catch (error) {
@@ -100,93 +168,30 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     loadExperience()
   }, [id, router])
 
-  const executeCommand = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value)
-    editorRef.current?.focus()
-  }, [])
-
-  const insertHTML = useCallback((html: string) => {
-    const selection = window.getSelection()
-    if (selection && selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0)
-      range.deleteContents()
-      const div = document.createElement("div")
-      div.innerHTML = html
-      const fragment = document.createDocumentFragment()
-      while (div.firstChild) {
-        fragment.appendChild(div.firstChild)
-      }
-      range.insertNode(fragment)
+  // Set editor content when both editor and experience are ready
+  useEffect(() => {
+    if (editor && experience && !editor.isDestroyed) {
+      editor.commands.setContent(experience.content)
     }
-  }, [])
-
-  const insertTable = () => {
-    const tableHTML = `
-      <table style="border-collapse: collapse; width: 100%; margin: 10px 0;">
-        <tr>
-          <td style="border: 1px solid #ccc; padding: 8px;">Round</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Type</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Duration</td>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #ccc; padding: 8px;">Round 1</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">Online Test</td>
-          <td style="border: 1px solid #ccc; padding: 8px;">90 minutes</td>
-        </tr>
-      </table>
-    `
-    insertHTML(tableHTML)
-  }
-
-  const insertCodeBlock = () => {
-    const codeHTML = `
-      <pre style="background-color: #f4f4f4; padding: 12px; border-radius: 4px; margin: 10px 0; overflow-x: auto;">
-        <code>// Sample coding question solution
-function twoSum(nums, target) {
-    const map = new Map();
-    for (let i = 0; i < nums.length; i++) {
-        const complement = target - nums[i];
-        if (map.has(complement)) {
-            return [map.get(complement), i];
-        }
-        map.set(nums[i], i);
-    }
-    return [];
-}</code>
-      </pre>
-    `
-    insertHTML(codeHTML)
-  }
+  }, [editor, experience])
 
   const handleSave = async () => {
-    if (!selectedCompany || !title || !role || !author || !experience) {
-      alert("Please fill in all required fields (Company, Title, Role, Candidate Name)")
+    if (!editor || !experience) return
+    if (!selectedCompany || !title || !role || !author || !selectionStatus) {
+      alert("Please fill in all required fields")
       return
     }
-
-    const content = editorRef.current?.innerHTML || ""
-    if (!content.trim()) {
+    const content = editor.getHTML()
+    if (!content.trim() || content === "<p></p>") {
       alert("Please write some content for your experience")
       return
     }
-
     setIsSaving(true)
-
-    const updatedExperience: Experience = {
-      ...experience,
-      companyId: selectedCompany,
-      title,
-      role,
-      duration,
-      author,
-      content,
-      selectionStatus,
-      ctc: ctc ? Number.parseFloat(ctc) : null,
-      offerType,
-    }
-
     try {
-      await updateExperience(updatedExperience)
+      await updateExperience({
+        ...experience, companyId: selectedCompany, title, role, duration, author, content, selectionStatus,
+        ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null, offerType: offerType || null,
+      })
       alert("Experience updated successfully!")
       router.push(`/experience/${experience.id}`)
     } catch (error) {
@@ -197,45 +202,28 @@ function twoSum(nums, target) {
     }
   }
 
-  if (!authChecked) {
+  if (!authChecked || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl font-medium">Checking authentication...</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-xl font-medium">Loading experience...</div>
-          <p className="text-gray-500 mt-2">Please wait while we load the experience for editing.</p>
-        </div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-xl font-medium text-foreground">{!authChecked ? "Checking authentication..." : "Loading experience..."}</div>
       </div>
     )
   }
 
   if (!experience) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Experience not found</div>
-          <p className="text-gray-500 mt-2">The experience you're trying to edit doesn't exist.</p>
-          <Button asChild className="mt-4">
-            <Link href="/admin">Go to Admin</Link>
-          </Button>
+          <p className="text-xl font-medium text-foreground">Experience not found</p>
+          <Button asChild className="mt-4"><Link href="/admin">Go to Admin</Link></Button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Button variant="ghost" asChild>
@@ -246,252 +234,133 @@ function twoSum(nums, target) {
             </Button>
             <div className="flex items-center gap-2">
               <Button variant={isPreview ? "outline" : "default"} size="sm" onClick={() => setIsPreview(false)}>
-                <Type className="w-4 h-4 mr-2" />
-                Edit
+                <Type className="w-4 h-4 mr-2" /> Edit
               </Button>
               <Button variant={isPreview ? "default" : "outline"} size="sm" onClick={() => setIsPreview(true)}>
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
+                <Eye className="w-4 h-4 mr-2" /> Preview
               </Button>
               <Button onClick={handleSave} size="sm" disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
-                {isSaving ? "Updating..." : "Update Experience"}
+                {isSaving ? "Updating..." : "Update"}
               </Button>
+              <ThemeToggle />
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
-        {/* Experience Details Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Edit Interview Experience
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="company">Company *</Label>
-                <CompanySelector onCompanySelect={setSelectedCompany} selectedCompany={selectedCompany} />
-                {selectedCompanyData && (
-                  <div className="flex items-center gap-2 mt-2 p-2 bg-gray-50 rounded">
-                    <Image
-                      src={selectedCompanyData.logo || "/placeholder.svg"}
-                      alt={`${selectedCompanyData.name} logo`}
-                      width={24}
-                      height={24}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-600">Editing for {selectedCompanyData.name}</span>
-                  </div>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="author">Candidate Name *</Label>
-                <Input
-                  id="author"
-                  placeholder="e.g., John Doe"
-                  value={author}
-                  onChange={(e) => setAuthor(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role Applied For *</Label>
-                <Input
-                  id="role"
-                  placeholder="e.g., Software Engineer, Data Scientist"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration">Interview Period</Label>
-                <Input
-                  id="duration"
-                  placeholder="e.g., March 2024"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="selectionStatus">Selection Status</Label>
-                <Input
-                  id="selectionStatus"
-                  placeholder="e.g., Selected, Rejected"
-                  value={selectionStatus}
-                  onChange={(e) => setSelectionStatus(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="ctc">CTC</Label>
-                <Input id="ctc" placeholder="e.g., 120000" value={ctc} onChange={(e) => setCTC(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="offerType">Offer Type</Label>
-                <Input
-                  id="offerType"
-                  placeholder="e.g., Full-time, Internship"
-                  value={offerType}
-                  onChange={(e) => setOfferType(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="title">Experience Title *</Label>
-              <Input
-                id="title"
-                placeholder="e.g., My Software Engineer Interview Experience at Google"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Rich Text Editor */}
-        <Card>
-          <CardContent className="p-0">
-            {!isPreview && (
-              <div className="border rounded-lg">
-                {/* Toolbar */}
-                <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-gray-50">
-                  {/* Text Formatting */}
-                  <div className="flex items-center gap-1">
-                    <Select onValueChange={(value) => executeCommand("formatBlock", value)}>
-                      <SelectTrigger className="w-32 h-8">
-                        <SelectValue placeholder="Format" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="div">Normal</SelectItem>
-                        <SelectItem value="h1">Heading 1</SelectItem>
-                        <SelectItem value="h2">Heading 2</SelectItem>
-                        <SelectItem value="h3">Heading 3</SelectItem>
-                        <SelectItem value="h4">Heading 4</SelectItem>
-                        <SelectItem value="p">Paragraph</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Separator orientation="vertical" className="h-6" />
-                  </div>
-
-                  {/* Basic Formatting */}
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => executeCommand("bold")} className="h-8 w-8 p-0">
-                      <Bold className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => executeCommand("italic")} className="h-8 w-8 p-0">
-                      <Italic className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("underline")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Underline className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("strikeThrough")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Strikethrough className="w-4 h-4" />
-                    </Button>
-                    <Separator orientation="vertical" className="h-6" />
-                  </div>
-
-                  {/* Lists and Elements */}
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("insertUnorderedList")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <List className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => executeCommand("insertOrderedList")}
-                      className="h-8 w-8 p-0"
-                    >
-                      <ListOrdered className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={insertTable} className="h-8 w-8 p-0">
-                      <ImageIcon className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={insertCodeBlock} className="h-8 w-8 p-0">
-                      <Code className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Editor */}
-                <div
-                  ref={editorRef}
-                  contentEditable
-                  className="min-h-[500px] p-6 focus:outline-none text-base leading-relaxed"
-                  style={{
-                    lineHeight: "1.6",
-                    fontSize: "16px",
-                  }}
-                />
-              </div>
-            )}
-
-            {isPreview && (
-              <div className="p-6 bg-white">
-                <div className="mb-6 pb-4 border-b">
-                  <div className="flex items-start gap-4 mb-4">
-                    {selectedCompanyData && (
+      <div className="flex justify-center bg-background">
+        <main className="w-full max-w-4xl px-6 py-8 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-center gap-2">
+                <FileText className="w-5 h-5" /> Edit Interview Experience
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company *</Label>
+                  <CompanySelector onCompanySelect={setSelectedCompany} selectedCompany={selectedCompany} />
+                  {selectedCompanyData && (
+                    <div className="flex items-center gap-2 mt-2 p-2 bg-muted rounded">
                       <Image
                         src={selectedCompanyData.logo || "/placeholder.svg"}
                         alt={`${selectedCompanyData.name} logo`}
-                        width={48}
-                        height={48}
+                        width={24}
+                        height={24}
                         className="rounded"
                       />
-                    )}
-                    <div>
-                      <h1 className="text-2xl font-bold mb-2">{title || "Interview Experience Title"}</h1>
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                        <span>
-                          <strong>Company:</strong> {selectedCompanyData?.name || "Select Company"}
-                        </span>
-                        <span>
-                          <strong>Role:</strong> {role || "Role Applied For"}
-                        </span>
-                        <span>
-                          <strong>Candidate:</strong> {author || "Candidate Name"}
-                        </span>
-                        {duration && (
-                          <span>
-                            <strong>Period:</strong> {duration}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-sm text-muted-foreground">Editing for {selectedCompanyData.name}</span>
                     </div>
-                  </div>
+                  )}
                 </div>
-                <div
-                  className="prose max-w-none"
-                  style={{
-                    fontSize: "16px",
-                    lineHeight: "1.6",
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: editorRef.current?.innerHTML || "Start writing your experience...",
-                  }}
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="selection-status">Selection Status *</Label>
+                  <Select value={selectionStatus} onValueChange={(value) => setSelectionStatus(value as Experience["selectionStatus"])}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="selected">Selected</SelectItem>
+                      <SelectItem value="not-selected">Not Selected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="author">Candidate Name *</Label>
+                  <Input
+                    id="author"
+                    placeholder="e.g., John Doe"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role Applied For *</Label>
+                  <Input
+                    id="role"
+                    placeholder="e.g., Software Engineer, Data Scientist"
+                    value={role}
+                    onChange={(e) => setRole(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Interview Period</Label>
+                  <Input
+                    id="duration"
+                    placeholder="e.g., March 2024"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ctc">CTC (in LPA)</Label>
+                  <Input
+                    id="ctc"
+                    type="number"
+                    step="0.1"
+                    placeholder="e.g., 12.5"
+                    value={ctc}
+                    onChange={(e) => setCTC(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="offer-type">Offer Type</Label>
+                  <Input
+                    id="offer-type"
+                    placeholder="e.g., Full-time, Internship, PPO"
+                    value={offerType}
+                    onChange={(e) => setOfferType(e.target.value)}
+                  />
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+              <div className="space-y-2">
+                <Label htmlFor="title">Experience Title *</Label>
+                <Input id="title" placeholder="e.g., My SWE Interview Experience at Google" value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-0">
+              {isPreview ? (
+                <div className="p-6 bg-card">
+                  <div
+                    className="prose prose-sm sm:prose lg:prose-lg xl:prose-2xl max-w-none dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: editor?.getHTML() || "Start writing..." }}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-md border border-input bg-card">
+                  <MenuBar editor={editor} />
+                  <EditorContent editor={editor} />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </main>
+      </div>
     </div>
   )
 }
