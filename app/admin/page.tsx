@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye, GraduationCap } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { ThemeToggle } from "../../components/theme-toggle"
@@ -142,6 +142,25 @@ export default function AdminPage() {
                   <Link href="/admin/batches">
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Manage Batches
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                    <LineChart className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <CardTitle>View Analytics</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">See website usage analytics from PostHog.</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/analytics">
+                    <LineChart className="w-4 h-4 mr-2" />
+                    View Analytics
                   </Link>
                 </Button>
               </CardContent>
