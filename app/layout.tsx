@@ -6,11 +6,13 @@ import { PHProvider } from "./providers"
 import { Suspense } from 'react'
 import { PostHogPageview } from "./posthog-pageview"
 
-
 export const metadata: Metadata = {
   title: "AIML Placement Experiences",
   description: "Placement experiences shared by AIML students",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 export default function RootLayout({
