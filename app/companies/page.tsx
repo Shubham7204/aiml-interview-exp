@@ -6,14 +6,16 @@ import { getExperiences } from "../../lib/database"
 import { CompanyCard } from "../../components/company-card"
 import type { Company, Experience } from "../../types/company"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Search } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([])
   const [experiences, setExperiences] = useState<Experience[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     async function fetchData() {
@@ -48,9 +50,20 @@ export default function CompaniesPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-8">
-          All Companies
-        </h1>
+        <div className="mb-8">
+          <div className="relative w-full">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <Search className="w-5 h-5" />
+            </span>
+            <Input
+              type="text"
+              placeholder="Search companies..."
+              className="pl-10 py-2 text-base md:text-sm"
+              value={search}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
@@ -63,9 +76,13 @@ export default function CompaniesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {companies.map((company) => (
-              <CompanyCard key={company.id} company={company} experiences={experiences} />
-            ))}
+            {companies
+              .filter(company =>
+                company.name.toLowerCase().includes(search.toLowerCase())
+              )
+              .map((company) => (
+                <CompanyCard key={company.id} company={company} experiences={experiences} />
+              ))}
           </div>
         )}
       </main>
