@@ -7,6 +7,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react"
 // Tiptap Extensions
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
+import TiptapLink from "@tiptap/extension-link"
 import TiptapImage from "@tiptap/extension-image" // Renamed to avoid JSX conflict
 import Table from "@tiptap/extension-table"
 import TableCell from "@tiptap/extension-table-cell"
@@ -111,6 +112,12 @@ export default function EditorPage() {
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
+      TiptapLink.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline cursor-pointer hover:text-blue-800',
+        },
+      }),
       TiptapImage.configure({ inline: false, allowBase64: true }),
       Table.configure({ resizable: true }),
       TableRow,

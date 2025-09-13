@@ -3,6 +3,7 @@
 import { useEditor, EditorContent, Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
+import TiptapLink from "@tiptap/extension-link"
 import {
   Bold,
   Italic,
@@ -14,8 +15,10 @@ import {
   Strikethrough,
   Underline as UnderlineIcon,
   Code,
+  Link as LinkIcon,
 } from "lucide-react"
 import { Toggle } from "@/components/ui/toggle"
+import { Button } from "@/components/ui/button"
 
 interface RichTextEditorProps {
   editor: Editor | null
@@ -24,6 +27,25 @@ interface RichTextEditorProps {
 const RichTextEditor = ({ editor }: RichTextEditorProps) => {
   if (!editor) {
     return null
+  }
+
+  const setLink = () => {
+    const previousUrl = editor.getAttributes('link').href
+    const url = window.prompt('URL', previousUrl)
+
+    // cancelled
+    if (url === null) {
+      return
+    }
+
+    // empty
+    if (url === '') {
+      editor.chain().focus().extendMarkRange('link').unsetLink().run()
+      return
+    }
+
+    // update link
+    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
   }
 
   return (
@@ -95,6 +117,14 @@ const RichTextEditor = ({ editor }: RichTextEditorProps) => {
         >
           <Code className="h-4 w-4" />
         </Toggle>
+        <Button
+          size="sm"
+          variant={editor.isActive('link') ? 'default' : 'ghost'}
+          onClick={setLink}
+          type="button"
+        >
+          <LinkIcon className="h-4 w-4" />
+        </Button>
       </div>
       <EditorContent
         editor={editor}

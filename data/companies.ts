@@ -4,7 +4,7 @@ export const companies: Company[] = [
   {
     id: "kpmg",
     name: "KPMG",
-    logo: "/logos/kpmg.jpeg",
+    logo: "/logos/kpmg.jpg",
     description: "KPMG in India is one of the leading providers of risk, financial services and business advisory, internal audit, corporate governance.",
     website: "https://kpmg.com/xx/en.html",
     industry: "Financial Services Advisory",

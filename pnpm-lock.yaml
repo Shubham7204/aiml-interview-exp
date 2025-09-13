@@ -98,6 +98,9 @@ importers:
       '@tiptap/extension-image':
         specifier: ^2.26.1
         version: 2.26.1(@tiptap/core@2.26.0(@tiptap/pm@2.26.0))
+      '@tiptap/extension-link':
+        specifier: ^3.4.2
+        version: 3.4.2(@tiptap/core@2.26.0(@tiptap/pm@2.26.0))(@tiptap/pm@2.26.0)
       '@tiptap/extension-table':
         specifier: ^2.26.1
         version: 2.26.1(@tiptap/core@2.26.0(@tiptap/pm@2.26.0))(@tiptap/pm@2.26.0)
@@ -1217,6 +1220,12 @@ packages:
     peerDependencies:
       '@tiptap/core': ^2.7.0
 
+  '@tiptap/extension-link@3.4.2':
+    resolution: {integrity: sha512-BNewJ6A6sHWzOlRhTtCp5ZLy8IguH54eEidntIbjSqV1nXwZot60PVdB+d53Mbz2SJJkdSrfbI7Kj0V1BTh6gA==}
+    peerDependencies:
+      '@tiptap/core': ^3.4.2
+      '@tiptap/pm': ^3.4.2
+
   '@tiptap/extension-list-item@2.26.0':
     resolution: {integrity: sha512-4Wtf6PfNlN8+BlBokV07DSWX4EbLHJagCx3gsLI5hwcL+bsW6tZVFFxMnN5+6eYcpWyU1fi7bBJ/kI2fNEA4Yg==}
     peerDependencies:
@@ -1706,6 +1715,9 @@ packages:
 
   linkify-it@5.0.0:
     resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
+
+  linkifyjs@4.3.2:
+    resolution: {integrity: sha512-NT1CJtq3hHIreOianA8aSXn6Cw0JzYOuDQbOrSPe7gqFnCpKP++MQe3ODgO3oh2GJFORkAAdqredOa60z63GbA==}
 
   lodash.castarray@4.4.0:
     resolution: {integrity: sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==}
@@ -3294,6 +3306,12 @@ snapshots:
     dependencies:
       '@tiptap/core': 2.26.0(@tiptap/pm@2.26.0)
 
+  '@tiptap/extension-link@3.4.2(@tiptap/core@2.26.0(@tiptap/pm@2.26.0))(@tiptap/pm@2.26.0)':
+    dependencies:
+      '@tiptap/core': 2.26.0(@tiptap/pm@2.26.0)
+      '@tiptap/pm': 2.26.0
+      linkifyjs: 4.3.2
+
   '@tiptap/extension-list-item@2.26.0(@tiptap/core@2.26.0(@tiptap/pm@2.26.0))':
     dependencies:
       '@tiptap/core': 2.26.0(@tiptap/pm@2.26.0)
@@ -3781,6 +3799,8 @@ snapshots:
   linkify-it@5.0.0:
     dependencies:
       uc.micro: 2.1.0
+
+  linkifyjs@4.3.2: {}
 
   lodash.castarray@4.4.0: {}
 
