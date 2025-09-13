@@ -2,6 +2,15 @@ import type { Company } from "../types/company"
 
 export const companies: Company[] = [
   {
+    id: "kpmg",
+    name: "KPMG",
+    logo: "/logos/kpmg.jpeg",
+    description: "KPMG in India is one of the leading providers of risk, financial services and business advisory, internal audit, corporate governance.",
+    website: "https://kpmg.com/xx/en.html",
+    industry: "Financial Services Advisory",
+    experienceCount: 0,
+  },
+  {
     id: "wissen-technologies",
     name: "Wissen Technologies",
     logo: "/logos/wissen-technologies.png",
