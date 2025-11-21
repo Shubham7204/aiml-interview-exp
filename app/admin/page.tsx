@@ -3,11 +3,61 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye, GraduationCap } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { ThemeToggle } from "../../components/theme-toggle"
 import { useRouter } from "next/navigation"
+
+import { supabase } from "@/lib/supabase";
+
+function PDFUploadAdmin() {
+  const [uploading, setUploading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
+
+  const uploadFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSuccess(""); setError("");
+    try {
+      setUploading(true);
+      const file = event.target.files?.[0];
+      if (!file) return;
+      if (file.type !== "application/pdf") {
+        setError("Please select a PDF file");
+        return;
+      }
+      const fileName = `${Date.now()}_${file.name}`;
+      const { error } = await supabase.storage.from('important-pdfs').upload(fileName, file);
+      if (error) throw error;
+      setSuccess("File uploaded successfully!");
+      event.target.value = '';
+    } catch (err: any) {
+      setError("Error uploading file: " + (err?.message || err));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center">
+      <input
+        type="file"
+        accept=".pdf"
+        onChange={uploadFile}
+        disabled={uploading}
+        className="hidden"
+        id="admin-pdf-upload"
+      />
+      <Button asChild disabled={uploading} className="cursor-pointer mb-2">
+        <label htmlFor="admin-pdf-upload">
+          {uploading ? 'Uploading...' : 'Choose PDF File'}
+        </label>
+      </Button>
+      {success && <p className="text-green-600 text-sm mt-1">{success}</p>}
+      {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
+    </div>
+  );
+}
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true)
@@ -68,6 +118,20 @@ export default function AdminPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* PDF Upload Card */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                <Upload className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <CardTitle>Upload Important PDF</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <PDFUploadAdmin />
+          </CardContent>
+        </Card>
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -142,6 +206,25 @@ export default function AdminPage() {
                   <Link href="/admin/batches">
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Manage Batches
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg flex items-center justify-center">
+                    <LineChart className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <CardTitle>View Analytics</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">See website usage analytics from PostHog.</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/analytics">
+                    <LineChart className="w-4 h-4 mr-2" />
+                    View Analytics
                   </Link>
                 </Button>
               </CardContent>

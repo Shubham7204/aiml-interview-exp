@@ -24,6 +24,7 @@ function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPagePr
   const [batch, setBatch] = useState<Batch | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [tab, setTab] = useState<'selected' | 'not_selected'>('selected')
 
   useEffect(() => {
     setIsAdmin(isAuthenticated())
@@ -77,14 +78,14 @@ function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPagePr
               </Link>
             </Button>
             <div className="flex items-center gap-2">
-              {isAdmin && (
-                <Button asChild>
-                  <Link href={`/editor?batch=${batchId}&company=${companyId}`}>
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Add Experience
-                  </Link>
-                </Button>
-              )}
+            {isAdmin && (
+              <Button asChild>
+                <Link href={`/editor?batch=${batchId}&company=${companyId}`}>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Experience
+                </Link>
+              </Button>
+            )}
               <ThemeToggle />
             </div>
           </div>
@@ -158,6 +159,10 @@ function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPagePr
                           <span>Role: {experience.role}</span>
                           <span>•</span>
                           <span>By {experience.author}</span>
+                          <span>•</span>
+                          <Badge variant={experience.selectionStatus === "selected" ? "default" : "secondary"}>
+                            {experience.selectionStatus === "selected" ? "Selected" : "Not Selected"}
+                          </Badge>
                         </div>
                       </div>
                       <Button size="sm" asChild>

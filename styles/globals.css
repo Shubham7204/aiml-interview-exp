@@ -92,3 +92,47 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Tiptap Table Styles */
+.tiptap table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.tiptap td,
+.tiptap th {
+  min-width: 1em;
+  border: 1px solid #ced4da;
+  padding: 0.5rem;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.tiptap th {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f1f3f5;
+}
+
+/* Column resizing handles */
+.column-resizing .resize-cursor {
+  cursor: col-resize;
+}
+
+/* Dark mode table styles (optional, but recommended) */
+.dark .tiptap th {
+    background-color: #2d3748; /* A dark header background */
+    border-color: #4a5568;
+}
+.dark .tiptap td {
+    border-color: #4a5568;
+}
+
+/* Styles for the preview pane */
+.prose img {
+  border-radius: 0.5rem;
+}

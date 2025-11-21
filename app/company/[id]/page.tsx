@@ -87,14 +87,14 @@ export default function CompanyPage({ params }: CompanyPageProps) {
               </Link>
             </Button>
             <div className="flex items-center gap-2">
-              {isAdmin && (
-                <Button asChild>
-                  <Link href={`/editor?company=${company.id}`}>
-                    <PlusCircle className="w-4 h-4 mr-2" />
-                    Add Experience
-                  </Link>
-                </Button>
-              )}
+            {isAdmin && (
+              <Button asChild>
+                <Link href={`/editor?company=${company.id}`}>
+                  <PlusCircle className="w-4 h-4 mr-2" />
+                  Add Experience
+                </Link>
+              </Button>
+            )}
               <ThemeToggle />
             </div>
           </div>
