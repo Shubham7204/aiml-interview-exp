@@ -1,11 +1,12 @@
-import type { Company } from "../types/company"
+import type { Company } from "../types/company";
 
 export const companies: Company[] = [
   {
     id: "kpmg",
     name: "KPMG",
     logo: "/logos/kpmg.jpg",
-    description: "KPMG in India is one of the leading providers of risk, financial services and business advisory, internal audit, corporate governance.",
+    description:
+      "KPMG in India is one of the leading providers of risk, financial services and business advisory, internal audit, corporate governance.",
     website: "https://kpmg.com/xx/en.html",
     industry: "Financial Services Advisory",
     experienceCount: 0,
@@ -14,7 +15,8 @@ export const companies: Company[] = [
     id: "wissen-technologies",
     name: "Wissen Technologies",
     logo: "/logos/wissen-technologies.png",
-    description: "A technology consultancy that drives digital innovation by connecting strategy and execution, helping global clients to strengthen their core technology.",
+    description:
+      "A technology consultancy that drives digital innovation by connecting strategy and execution, helping global clients to strengthen their core technology.",
     website: "https://www.wissen.com",
     industry: "Technology Consulting",
     experienceCount: 0,
@@ -23,7 +25,8 @@ export const companies: Company[] = [
     id: "zs-associates",
     name: "ZS Associates",
     logo: "/logos/zs-associates.png",
-    description: "ZS is a management consulting and technology firm that partners with companies to improve life and how we live it.",
+    description:
+      "ZS is a management consulting and technology firm that partners with companies to improve life and how we live it.",
     website: "https://www.zs.com",
     industry: "Management Consulting",
     experienceCount: 0,
@@ -32,7 +35,8 @@ export const companies: Company[] = [
     id: "idfy",
     name: "IDfy",
     logo: "/logos/idfy.png",
-    description: "Asia's leading TrustStack with enterprise-grade KYC, KYB, BGV, Risk Mitigation, Digital Onboarding and Privacy solutions.",
+    description:
+      "Asia's leading TrustStack with enterprise-grade KYC, KYB, BGV, Risk Mitigation, Digital Onboarding and Privacy solutions.",
     website: "https://www.idfy.com",
     industry: "Identity Verification",
     experienceCount: 0,
@@ -41,7 +45,8 @@ export const companies: Company[] = [
     id: "ubs",
     name: "UBS",
     logo: "/logos/ubs.png",
-    description: "A complete range of tailored advice and investment services for distinguished investors and families around the world.",
+    description:
+      "A complete range of tailored advice and investment services for distinguished investors and families around the world.",
     website: "https://www.ubs.com",
     industry: "Financial Services",
     experienceCount: 0,
@@ -50,7 +55,8 @@ export const companies: Company[] = [
     id: "tresvista",
     name: "TresVista",
     logo: "/logos/tresvista.jpeg",
-    description: "TresVista is a global enterprise offering a diversified portfolio of services that enables its clients to achieve resource optimization through leveraging an execution-focused model.",
+    description:
+      "TresVista is a global enterprise offering a diversified portfolio of services that enables its clients to achieve resource optimization through leveraging an execution-focused model.",
     website: "https://www.tresvista.com",
     industry: "Financial Services Outsourcing",
     experienceCount: 0,
@@ -59,7 +65,8 @@ export const companies: Company[] = [
     id: "nvent",
     name: "nVent",
     logo: "/logos/nvent.png",
-    description: "nVent TRACHTE is the leading manufacturer of engineered building solutions, specializing in substation control buildings, E-houses, modular data centers, and energy infrastructure.",
+    description:
+      "nVent TRACHTE is the leading manufacturer of engineered building solutions, specializing in substation control buildings, E-houses, modular data centers, and energy infrastructure.",
     website: "https://www.nvent.com",
     industry: "Electrical Manufacturing",
     experienceCount: 0,
@@ -68,7 +75,8 @@ export const companies: Company[] = [
     id: "ion-group",
     name: "ION Group",
     logo: "/logos/ion-group.jpeg",
-    description: "ION software helps you improve decision-making, increase efficiency, simplify complex processes and empower your people. We enable financial institutions, governments, and corporates to digitize and automate operations.",
+    description:
+      "ION software helps you improve decision-making, increase efficiency, simplify complex processes and empower your people. We enable financial institutions, governments, and corporates to digitize and automate operations.",
     website: "https://iongroup.com",
     industry: "Financial Software",
     experienceCount: 0,
@@ -77,7 +85,8 @@ export const companies: Company[] = [
     id: "indus-valley-partners",
     name: "Indus Valley Partners",
     logo: "/logos/ivp.jpeg",
-    description: "Indus Valley Partners keeps the world's most sophisticated investment managers one step ahead of the future with improved efficiency, insight, and performance.",
+    description:
+      "Indus Valley Partners keeps the world's most sophisticated investment managers one step ahead of the future with improved efficiency, insight, and performance.",
     website: "https://www.ivp.in",
     industry: "FinTech Consulting",
     experienceCount: 0,
@@ -86,7 +95,8 @@ export const companies: Company[] = [
     id: "seclore",
     name: "Seclore",
     logo: "/logos/seclore.png",
-    description: "Seclore's data-centric security platform seamlessly orchestrates and automates the discovery, classification, protection, monitoring and tracking of digital data.",
+    description:
+      "Seclore's data-centric security platform seamlessly orchestrates and automates the discovery, classification, protection, monitoring and tracking of digital data.",
     website: "https://www.seclore.com",
     industry: "Cybersecurity",
     experienceCount: 0,
@@ -95,7 +105,8 @@ export const companies: Company[] = [
     id: "gupshup",
     name: "Gupshup",
     logo: "/logos/gupshup.jpeg",
-    description: "Platform capabilities to make you a superhuman — go beyond LLMs and chatbots. Make conversations flow with AI Agents purpose-built for your industry.",
+    description:
+      "Platform capabilities to make you a superhuman — go beyond LLMs and chatbots. Make conversations flow with AI Agents purpose-built for your industry.",
     website: "https://www.gupshup.io",
     industry: "Conversational AI",
     experienceCount: 0,
@@ -104,7 +115,8 @@ export const companies: Company[] = [
     id: "capgemini",
     name: "Capgemini",
     logo: "/logos/capgemini.png",
-    description: "A global leader in consulting, technology services, and digital transformation, offering integrated services combining technology with deep industry expertise.",
+    description:
+      "A global leader in consulting, technology services, and digital transformation, offering integrated services combining technology with deep industry expertise.",
     website: "https://www.capgemini.com",
     industry: "IT Consulting",
     experienceCount: 0,
@@ -113,7 +125,8 @@ export const companies: Company[] = [
     id: "tcs",
     name: "TCS",
     logo: "/logos/tcs.jpeg",
-    description: "TCS, a global leader in IT services, consulting, and business solutions, leverages technology for business transformation and helps catalyze change.",
+    description:
+      "TCS, a global leader in IT services, consulting, and business solutions, leverages technology for business transformation and helps catalyze change.",
     website: "https://www.tcs.com",
     industry: "IT Services",
     experienceCount: 0,
@@ -122,7 +135,8 @@ export const companies: Company[] = [
     id: "home-first-finance",
     name: "HomeFirst Finance",
     logo: "/logos/home_first_finance_company.jpeg",
-    description: "India's Home Loan Express! Get the fastest solutions to all your home loan needs including EMI payment, loan tracking, auto prepay and top-up loans.",
+    description:
+      "India's Home Loan Express! Get the fastest solutions to all your home loan needs including EMI payment, loan tracking, auto prepay and top-up loans.",
     website: "https://homefirstindia.com",
     industry: "Housing Finance",
     experienceCount: 0,
@@ -131,43 +145,48 @@ export const companies: Company[] = [
     id: "cognizant",
     name: "Cognizant",
     logo: "/logos/cognizant.png",
-    description: "Operate with insight and speed—using AI-powered processes that supercharge performance. Scalable and efficient cloud solutions for business transformation.",
+    description:
+      "Operate with insight and speed—using AI-powered processes that supercharge performance. Scalable and efficient cloud solutions for business transformation.",
     website: "https://www.cognizant.com",
     industry: "IT Services",
     experienceCount: 0,
   },
-    {
-      id: "fractal",
-      name: "Fractal",
-      logo: "/logos/fractal.png",
-      description: "Fractal is one of the most prominent providers of Artificial Intelligence to Fortune 500® companies. Fractal's vision is to power every human decision in the enterprise.",
-      website: "https://fractal.ai/",
-      industry: "Artificial Intelligence",
-      experienceCount: 0,
-    },
-    {
-      id: "hyperverge",
-      name: "Hyperverge",
-      logo: "/logos/hyperverge.png",
-      description: "AI-driven onboarding platform that cuts drop-offs and fraud, ensures compliance, and enables you to grow your revenue 5x faster.",
-      website: "https://hyperverge.co/in/",
-      industry: "AI Onboarding Platform",
-      experienceCount: 0,
-    },
-    {
-      id: "axxela",
-      name: "Axxela",
-      logo: "/logos/axella.jpg",
-      description: "Focusing capital investments in commercial trade service businesses, Axxela has assembled a small, but rapidly expanding, portfolio of companies.",
-      website: "https://www.axxela.in/",
-      industry: "Commercial Trade Services",
-      experienceCount: 0,
-    },
-    {
+  {
+    id: "fractal",
+    name: "Fractal",
+    logo: "/logos/fractal.png",
+    description:
+      "Fractal is one of the most prominent providers of Artificial Intelligence to Fortune 500® companies. Fractal's vision is to power every human decision in the enterprise.",
+    website: "https://fractal.ai/",
+    industry: "Artificial Intelligence",
+    experienceCount: 0,
+  },
+  {
+    id: "hyperverge",
+    name: "Hyperverge",
+    logo: "/logos/hyperverge.png",
+    description:
+      "AI-driven onboarding platform that cuts drop-offs and fraud, ensures compliance, and enables you to grow your revenue 5x faster.",
+    website: "https://hyperverge.co/in/",
+    industry: "AI Onboarding Platform",
+    experienceCount: 0,
+  },
+  {
+    id: "axxela",
+    name: "Axxela",
+    logo: "/logos/axella.jpg",
+    description:
+      "Focusing capital investments in commercial trade service businesses, Axxela has assembled a small, but rapidly expanding, portfolio of companies.",
+    website: "https://www.axxela.in/",
+    industry: "Commercial Trade Services",
+    experienceCount: 0,
+  },
+  {
     id: "2cents-capital",
     name: "2Cents Capital",
     logo: "/logos/2cents-capital.png",
-    description: "Explore 2Cents Capital, a premier Dubai-based hedge fund offering innovative investment strategies, including structured products, derivatives, and alternative assets.",
+    description:
+      "Explore 2Cents Capital, a premier Dubai-based hedge fund offering innovative investment strategies, including structured products, derivatives, and alternative assets.",
     website: "https://www.2centscapital.com",
     industry: "Hedge Fund",
     experienceCount: 0,
@@ -176,7 +195,8 @@ export const companies: Company[] = [
     id: "ey",
     name: "EY",
     logo: "/logos/ey.png",
-    description: "EY provides consulting, assurance, tax and transaction services that help solve our client’s toughest challenges and build a better working world.",
+    description:
+      "EY provides consulting, assurance, tax and transaction services that help solve our client’s toughest challenges and build a better working world.",
     website: "https://www.ey.com/en_in",
     industry: "Professional Services",
     experienceCount: 0,
@@ -185,7 +205,8 @@ export const companies: Company[] = [
     id: "rudder-analytics",
     name: "Rudder Analytics",
     logo: "/logos/rudder-analytics.jpeg",
-    description: "End-to-end data analytics, business intelligence, and ML & AI solutions for your business' digital transformation and competitive advantage.",
+    description:
+      "End-to-end data analytics, business intelligence, and ML & AI solutions for your business' digital transformation and competitive advantage.",
     website: "https://rudderanalytics.com",
     industry: "Data Analytics",
     experienceCount: 0,
@@ -194,7 +215,8 @@ export const companies: Company[] = [
     id: "ncs",
     name: "NCS",
     logo: "/logos/ncs.png",
-    description: "NCS India powers your digital transformations with IT services and enterprise solutions to future-proof your business.",
+    description:
+      "NCS India powers your digital transformations with IT services and enterprise solutions to future-proof your business.",
     website: "https://www.ncs.co/en-in",
     industry: "IT Services",
     experienceCount: 0,
@@ -203,7 +225,8 @@ export const companies: Company[] = [
     id: "logiqids",
     name: "LogIQids",
     logo: "/logos/logiqids.png",
-    description: "LogIQids is an educational app for children aged 5-14. Started by IIT-IIM graduates, it is rated India's #1 brain training activity for kids.",
+    description:
+      "LogIQids is an educational app for children aged 5-14. Started by IIT-IIM graduates, it is rated India's #1 brain training activity for kids.",
     website: "https://www.logiqids.com",
     industry: "EdTech",
     experienceCount: 0,
@@ -212,27 +235,40 @@ export const companies: Company[] = [
     id: "morgan-stanley",
     name: "Morgan Stanley",
     logo: "/logos/morgan.png",
-    description: "Morgan Stanley is a leading global financial services firm providing investment banking, securities, wealth management and investment management services.",
+    description:
+      "Morgan Stanley is a leading global financial services firm providing investment banking, securities, wealth management and investment management services.",
     website: "https://www.morganstanley.com/",
     industry: "Financial Services",
     experienceCount: 0,
   },
-    {
-      id: "deloitte",
-      name: "Deloitte",
-      logo: "/logos/deloitte.png",
-      description: "Deloitte is a global leader in audit, consulting, financial advisory, risk management, and tax services for private and public clients.",
-      website: "https://www2.deloitte.com",
-      industry: "Professional Services",
-      experienceCount: 0,
-    },
-    {
-      id: "apollo-global-management",
-      name: "Apollo Global Management",
-      logo: "/logos/apollo.jpg",
-      description: "Apollo Global Management, Inc. is an American asset management firm that primarily invests in alternative assets.",
-      website: "https://www.apollo.com",
-      industry: "Private Banking / Asset Management",
-      experienceCount: 0,
-    },
-]
+  {
+    id: "deloitte",
+    name: "Deloitte",
+    logo: "/logos/deloitte.png",
+    description:
+      "Deloitte is a global leader in audit, consulting, financial advisory, risk management, and tax services for private and public clients.",
+    website: "https://www2.deloitte.com",
+    industry: "Professional Services",
+    experienceCount: 0,
+  },
+  {
+    id: "apollo-global-management",
+    name: "Apollo Global Management",
+    logo: "/logos/apollo.jpg",
+    description:
+      "Apollo Global Management, Inc. is an American asset management firm that primarily invests in alternative assets.",
+    website: "https://www.apollo.com",
+    industry: "Private Banking / Asset Management",
+    experienceCount: 0,
+  },
+  {
+    id: "here-technologies",
+    name: "HERE Technologies",
+    logo: "/logos/here.png",
+    description:
+      "A leading global location technology and mapping company providing digital maps, location services, APIs and spatial intelligence solutions.",
+    website: "https://www.here.com",
+    industry: "Location Technology / Mapping",
+    experienceCount: 0,
+  },
+];
