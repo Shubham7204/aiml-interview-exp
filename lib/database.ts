@@ -1,5 +1,99 @@
 import { supabase } from "./supabase"
-import type { Experience, Batch } from "../types/company"
+import { companies as fallbackCompanies } from "../data/companies"
+import type { Experience, Batch, Company } from "../types/company"
+
+function mapCompany(item: any): Company {
+  return {
+    id: item.id,
+    name: item.name,
+    logo: item.logo,
+    description: item.description,
+    website: item.website || undefined,
+    industry: item.industry,
+    experienceCount: 0,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
+}
+
+// Company management functions
+export async function getCompanies(): Promise<Company[]> {
+  const { data, error } = await supabase.from("companies").select("*").order("name", { ascending: true })
+
+  if (error) {
+    console.warn("Using static companies because database companies could not be fetched:", error.message)
+    return fallbackCompanies
+  }
+
+  if (!data || data.length === 0) {
+    return fallbackCompanies
+  }
+
+  const companyMap = new Map<string, Company>()
+  fallbackCompanies.forEach((company) => companyMap.set(company.id, company))
+  data.map(mapCompany).forEach((company) => companyMap.set(company.id, company))
+
+  return Array.from(companyMap.values()).sort((a, b) => a.name.localeCompare(b.name))
+}
+
+export async function getCompanyById(id: string): Promise<Company | null> {
+  const { data, error } = await supabase.from("companies").select("*").eq("id", id).single()
+
+  if (error) {
+    if (error.code !== "PGRST116") {
+      console.warn("Falling back to static company lookup:", error.message)
+    }
+    return fallbackCompanies.find((company) => company.id === id) || null
+  }
+
+  return mapCompany(data)
+}
+
+export async function createCompany(company: Omit<Company, "experienceCount" | "createdAt" | "updatedAt">): Promise<Company> {
+  const { data, error } = await supabase
+    .from("companies")
+    .insert([
+      {
+        id: company.id,
+        name: company.name,
+        logo: company.logo,
+        description: company.description,
+        website: company.website || null,
+        industry: company.industry,
+      },
+    ])
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error creating company:", error)
+    if (error.code === "23505") {
+      throw new Error(`A company with the ID "${company.id}" already exists.`)
+    }
+    throw new Error(error.message || "Failed to create company")
+  }
+
+  return mapCompany(data)
+}
+
+export async function uploadCompanyLogo(file: File, companyId: string): Promise<string> {
+  const extension = file.name.split(".").pop()?.toLowerCase() || "png"
+  const filePath = `${companyId}-${Date.now()}.${extension}`
+
+  const { error } = await supabase.storage.from("company-logos").upload(filePath, file, {
+    cacheControl: "3600",
+    contentType: file.type || "image/png",
+    upsert: true,
+  })
+
+  if (error) {
+    console.error("Error uploading company logo:", error)
+    throw new Error(error.message || "Failed to upload company logo")
+  }
+
+  const { data } = supabase.storage.from("company-logos").getPublicUrl(filePath)
+  return data.publicUrl
+}
 
 // Batch management functions
 export async function getBatches(): Promise<Batch[]> {
@@ -109,7 +203,10 @@ export async function createBatch(batch: Omit<Batch, "id" | "createdAt" | "updat
 
   if (error) {
     console.error("Error creating batch:", error)
-    throw new Error("Failed to create batch")
+    if (error.code === "23505") {
+      throw new Error(`A batch for ${batch.year} already exists.`)
+    }
+    throw new Error(error.message || "Failed to create batch")
   }
 
   return {

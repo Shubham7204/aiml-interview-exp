@@ -16,14 +16,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { getExperienceById, deleteExperience } from "../../../lib/database"
+import { getCompanyById, getExperienceById, deleteExperience } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
-import { companies } from "../../../data/companies"
 import { ThemeToggle } from "../../../components/theme-toggle"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, User, Briefcase, Edit, Trash2 } from "lucide-react"
-import type { Experience } from "../../../types/company"
+import type { Company, Experience } from "../../../types/company"
 
 interface ExperiencePageProps {
   params: Promise<{ id: string }>
@@ -33,6 +32,7 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
   const { id } = React.use(params)
   const router = useRouter()
   const [experience, setExperience] = useState<Experience | null>(null)
+  const [company, setCompany] = useState<Company | null>(null)
   const [loading, setLoading] = useState(true)
   const [isDeleting, setIsDeleting] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -44,6 +44,9 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
       try {
         const foundExperience = await getExperienceById(id)
         setExperience(foundExperience)
+        if (foundExperience) {
+          setCompany(await getCompanyById(foundExperience.companyId))
+        }
       } catch (error) {
         console.error("Error loading experience:", error)
       } finally {
@@ -93,8 +96,6 @@ export default function ExperiencePage({ params }: ExperiencePageProps) {
       </div>
     )
   }
-
-  const company = companies.find((c) => c.id === experience.companyId)
 
   return (
     <div className="min-h-screen bg-background">

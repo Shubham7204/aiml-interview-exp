@@ -21,6 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_batches_active ON batches(is_active);
 
 -- Insert default batches
 INSERT INTO batches (year, name, description, is_active) VALUES
+(2027, 'AIML 27', 'AI & ML Batch 2027', true),
 (2026, 'AIML 26', 'AI & ML Batch 2026', true),
 (2025, 'AIML 25', 'AI & ML Batch 2025', true),
 (2024, 'AIML 24', 'AI & ML Batch 2024', true)

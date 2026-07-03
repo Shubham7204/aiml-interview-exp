@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { companies } from "../../../data/companies"
-import { getExperiencesByCompany, getBatches } from "../../../lib/database"
+import { getCompanyById, getExperiencesByCompany, getBatches } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
 import { ThemeToggle } from "../../../components/theme-toggle"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink, MapPin, Users, PlusCircle, Calendar } from "lucide-react"
-import type { Experience, Batch } from "../../../types/company"
+import type { Company, Experience, Batch } from "../../../types/company"
 
 interface CompanyPageProps {
   params: Promise<{ id: string }>
@@ -22,6 +21,7 @@ interface CompanyPageProps {
 export default function CompanyPage({ params }: CompanyPageProps) {
   const { id } = React.use(params)
   const [experiences, setExperiences] = useState<Experience[]>([])
+  const [company, setCompany] = useState<Company | null>(null)
   const [batches, setBatches] = useState<Batch[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -31,7 +31,12 @@ export default function CompanyPage({ params }: CompanyPageProps) {
 
     async function loadData() {
       try {
-        const [companyExperiences, allBatches] = await Promise.all([getExperiencesByCompany(id), getBatches()])
+        const [companyData, companyExperiences, allBatches] = await Promise.all([
+          getCompanyById(id),
+          getExperiencesByCompany(id),
+          getBatches(),
+        ])
+        setCompany(companyData)
         setExperiences(companyExperiences)
         setBatches(allBatches)
       } catch (error) {
@@ -44,21 +49,19 @@ export default function CompanyPage({ params }: CompanyPageProps) {
     loadData()
   }, [id])
 
-  const company = companies.find((c) => c.id === id)
-
-  if (!company) {
-    notFound()
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl font-medium text-foreground">Loading experiences...</div>
-          <p className="text-muted-foreground mt-2">Please wait while we fetch {company.name} experiences.</p>
+          <p className="text-muted-foreground mt-2">Please wait while we fetch company experiences.</p>
         </div>
       </div>
     )
+  }
+
+  if (!company) {
+    notFound()
   }
 
   // Group experiences by batch

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload, Building2 } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { ThemeToggle } from "../../components/theme-toggle"
@@ -142,7 +142,7 @@ export default function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">Create a new placement experience for AIML 26 students.</p>
+                <p className="text-muted-foreground mb-4">Create a new placement experience for the latest AIML batch.</p>
                 <Button asChild className="w-full">
                   <Link href="/editor">
                     <PlusCircle className="w-4 h-4 mr-2" />
@@ -166,7 +166,7 @@ export default function AdminPage() {
                 <Button asChild variant="outline" className="w-full">
                   <Link href="/">
                     <Eye className="w-4 h-4 mr-2" />
-                    View AIML 26
+                    View Latest Batch
                   </Link>
                 </Button>
               </CardContent>
@@ -206,6 +206,25 @@ export default function AdminPage() {
                   <Link href="/admin/batches">
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Manage Batches
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <CardTitle>Manage Companies</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Add company logos, descriptions, websites, and industries.</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/admin/companies">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Manage Companies
                   </Link>
                 </Button>
               </CardContent>

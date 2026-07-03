@@ -3,6 +3,14 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -14,15 +22,18 @@ import { isAuthenticated, logout } from "../../../lib/auth"
 import { useRouter } from "next/navigation"
 import { getBatches, createBatch } from "../../../lib/database"
 import type { Batch } from "../../../types/company"
+import { ThemeToggle } from "../../../components/theme-toggle"
 
 export default function BatchManagementPage() {
   const [loading, setLoading] = useState(true)
   const [batches, setBatches] = useState<Batch[]>([])
   const [showAddForm, setShowAddForm] = useState(false)
+  const defaultNewBatchYear = 2027
+  const [dialogState, setDialogState] = useState({ open: false, title: "", description: "" })
   const [newBatch, setNewBatch] = useState({
-    year: new Date().getFullYear() + 1,
-    name: "",
-    description: "",
+    year: defaultNewBatchYear,
+    name: "AIML 27",
+    description: "AIML Batch of 2027",
     isActive: true,
   })
   const [saving, setSaving] = useState(false)
@@ -52,9 +63,21 @@ export default function BatchManagementPage() {
     router.push("/")
   }
 
+  const showDialog = (title: string, description: string) => {
+    setDialogState({ open: true, title, description })
+  }
+
   const handleAddBatch = async () => {
     if (!newBatch.name || !newBatch.year) {
-      alert("Please fill in all required fields")
+      showDialog("Missing details", "Please fill in the batch name and year before creating a batch.")
+      return
+    }
+
+    if (batches.some((batch) => batch.year === newBatch.year)) {
+      showDialog(
+        "Duplicate batch",
+        `${newBatch.name} (${newBatch.year}) already exists. Please choose a different year.`,
+      )
       return
     }
 
@@ -64,15 +87,15 @@ export default function BatchManagementPage() {
       await loadBatches()
       setShowAddForm(false)
       setNewBatch({
-        year: new Date().getFullYear() + 1,
-        name: "",
-        description: "",
+        year: defaultNewBatchYear,
+        name: "AIML 27",
+        description: "AIML Batch of 2027",
         isActive: true,
       })
-      alert("Batch created successfully!")
+      showDialog("Batch created", "The batch was created successfully.")
     } catch (error) {
       console.error("Error creating batch:", error)
-      alert("Error creating batch. Please try again.")
+      showDialog("Unable to create batch", error instanceof Error ? error.message : "Please try again.")
     } finally {
       setSaving(false)
     }
@@ -89,18 +112,18 @@ export default function BatchManagementPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="text-xl font-medium">Loading...</div>
+          <div className="text-xl font-medium text-foreground">Loading...</div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
@@ -111,14 +134,17 @@ export default function BatchManagementPage() {
                 </Link>
               </Button>
               <div>
-                <h1 className="text-xl font-bold">Batch Management</h1>
-                <p className="text-sm text-gray-600">Manage AIML batches</p>
+                <h1 className="text-xl font-bold text-foreground">Batch Management</h1>
+                <p className="text-sm text-muted-foreground">Manage AIML batches</p>
               </div>
             </div>
-            <Button onClick={handleLogout} variant="outline" size="sm">
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={handleLogout} variant="outline" size="sm">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
@@ -198,7 +224,7 @@ export default function BatchManagementPage() {
 
           {/* Existing Batches */}
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">Existing Batches</h2>
+            <h2 className="text-2xl font-bold text-foreground">Existing Batches</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {batches.map((batch) => (
                 <Card key={batch.id}>
@@ -206,7 +232,7 @@ export default function BatchManagementPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-lg">{batch.name}</CardTitle>
-                        <p className="text-sm text-gray-600">Year: {batch.year}</p>
+                        <p className="text-sm text-muted-foreground">Year: {batch.year}</p>
                       </div>
                       <Badge variant={batch.isActive ? "default" : "secondary"}>
                         {batch.isActive ? "Active" : "Inactive"}
@@ -214,8 +240,8 @@ export default function BatchManagementPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {batch.description && <p className="text-sm text-gray-600 mb-4">{batch.description}</p>}
-                    <div className="text-xs text-gray-500">
+                    {batch.description && <p className="text-sm text-muted-foreground mb-4">{batch.description}</p>}
+                    <div className="text-xs text-muted-foreground">
                       Created: {new Date(batch.createdAt).toLocaleDateString()}
                     </div>
                   </CardContent>
@@ -225,6 +251,18 @@ export default function BatchManagementPage() {
           </div>
         </div>
       </main>
+
+      <Dialog open={dialogState.open} onOpenChange={(open) => setDialogState((prev) => ({ ...prev, open }))}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogState.title}</DialogTitle>
+            <DialogDescription>{dialogState.description}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setDialogState((prev) => ({ ...prev, open: false }))}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

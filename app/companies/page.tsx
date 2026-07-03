@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { companies as companyData } from "../../data/companies"
-import { getExperiences } from "../../lib/database"
+import { getCompanies, getExperiences } from "../../lib/database"
 import { CompanyCard } from "../../components/company-card"
 import type { Company, Experience } from "../../types/company"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -19,7 +18,7 @@ export default function CompaniesPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const allExperiences = await getExperiences()
+      const [allExperiences, companyData] = await Promise.all([getExperiences(), getCompanies()])
       const companiesWithCounts = companyData.map((company) => ({
           ...company,
         experienceCount: allExperiences.filter((exp) => exp.companyId === company.id).length,
