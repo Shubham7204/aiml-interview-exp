@@ -241,19 +241,20 @@ export default function ImportantPage() {
                 </div>
             </header>
 
-            <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8">
+            <main className="flex-1 py-6 sm:py-8 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-8">
-                        <h1 className="text-4xl font-bold text-primary mb-4">Important Interviews Experience (by other depts)</h1>
+                    <div className="text-center mb-6 sm:mb-8">
+                        <h1 className="text-2xl sm:text-4xl font-bold text-primary mb-2">Important Interviews Experience</h1>
+                        <p className="text-sm sm:text-base text-muted-foreground">Resources and logs uploaded by depts</p>
                     </div>
 
                     {/* Upload Section (Admins only) */}
                     {isAdmin && (
-                        <div className="mb-8">
-                            <div className="bg-card border-2 border-dashed border-border rounded-lg p-8 text-center">
-                                <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold mb-2">Upload PDF Files</h3>
-                                <p className="text-muted-foreground mb-4">Select PDF files to upload to the important documents collection</p>
+                        <div className="mb-6 sm:mb-8">
+                            <div className="bg-card border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center">
+                                <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-3" />
+                                <h3 className="text-base sm:text-lg font-semibold mb-1">Upload PDF Files</h3>
+                                <p className="text-xs sm:text-sm text-muted-foreground mb-4">Select PDF files to upload to the important documents collection</p>
                                 <input
                                     type="file"
                                     accept=".pdf"
@@ -276,16 +277,16 @@ export default function ImportantPage() {
                     )}
 
                     {/* Files List */}
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                         <div className="flex justify-between items-center">
-                            <h2 className="text-2xl font-semibold">Uploaded Documents</h2>
+                            <h2 className="text-lg sm:text-2xl font-semibold">Uploaded Documents</h2>
                             <Button
                                 onClick={loadFiles}
                                 variant="outline"
                                 size="sm"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1.5 sm:gap-2"
                             >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-3.5 h-3.5" />
                                 Refresh
                             </Button>
                         </div>
@@ -310,33 +311,30 @@ export default function ImportantPage() {
                                 {files.map((file) => (
                                     <div
                                         key={file.name}
-                                        className="bg-card border rounded-lg p-6 hover:shadow-md transition-shadow"
+                                        className="bg-card border rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow"
                                     >
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                             <div className="flex-1 min-w-0">
-                                                <div className="w-full max-w-full overflow-x-auto">
-                                                    <h3
-                                                        className="font-semibold text-base sm:text-lg truncate mb-1 whitespace-nowrap"
-                                                        title={file.name}
-                                                        style={{ maxWidth: '100%' }}
-                                                    >
-                                                        {file.name}
-                                                    </h3>
-                                                </div>
-                                                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                                                <h3
+                                                    className="font-semibold text-base sm:text-lg break-all mb-1 text-foreground"
+                                                    title={file.name}
+                                                >
+                                                    {file.name}
+                                                </h3>
+                                                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-muted-foreground">
                                                     <span>Size: {file.metadata?.size ? (file.metadata.size / 1024 / 1024).toFixed(2) : 'N/A'} MB</span>
                                                     <span>Modified: {file.updated_at ? new Date(file.updated_at).toLocaleDateString() : 'N/A'}</span>
                                                 </div>
                                             </div>
 
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                                 <Button
                                                     onClick={() => viewFile(file.name)}
                                                     variant="default"
                                                     size="sm"
-                                                    className="flex items-center gap-2"
+                                                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                                 >
-                                                    <Eye className="w-4 h-4" />
+                                                    <Eye className="w-3.5 h-3.5" />
                                                     View
                                                 </Button>
 
@@ -344,9 +342,9 @@ export default function ImportantPage() {
                                                     onClick={() => downloadFile(file.name)}
                                                     variant="secondary"
                                                     size="sm"
-                                                    className="flex items-center gap-2"
+                                                    className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                                 >
-                                                    <Download className="w-4 h-4" />
+                                                    <Download className="w-3.5 h-3.5" />
                                                     Download
                                                 </Button>
 
@@ -356,18 +354,18 @@ export default function ImportantPage() {
                                                             onClick={() => renameFile(file.name)}
                                                             variant="outline"
                                                             size="sm"
-                                                            className="flex items-center gap-2"
+                                                            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                                         >
-                                                            <Edit className="w-4 h-4" />
+                                                            <Edit className="w-3.5 h-3.5" />
                                                             Rename
                                                         </Button>
                                                         <Button
                                                             onClick={() => deleteFile(file.name)}
                                                             variant="destructive"
                                                             size="sm"
-                                                            className="flex items-center gap-2"
+                                                            className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2.5 sm:px-3 h-8 sm:h-9"
                                                         >
-                                                            <Trash2 className="w-4 h-4" />
+                                                            <Trash2 className="w-3.5 h-3.5" />
                                                             Delete
                                                         </Button>
                                                     </>

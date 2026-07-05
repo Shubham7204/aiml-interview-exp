@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { isAuthenticated } from "../../../lib/auth"
+import { isAuthenticated, logout } from "../../../lib/auth"
 import {
   getAllExperiencesForAdmin,
   updateExperienceStatus,
@@ -14,6 +14,7 @@ import {
 import { companies } from "../../../data/companies"
 import { ThemeToggle } from "../../../components/theme-toggle"
 import type { Experience, ExperienceRound, ExperienceResource } from "../../../types/company"
+
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -57,6 +58,7 @@ import {
   BookOpen,
   Lightbulb,
   ExternalLink,
+  LogOut,
 } from "lucide-react"
 
 // ============================================
@@ -654,6 +656,11 @@ export default function ModerationPage() {
     fetchData()
   }, [router])
 
+  const handleLogout = () => {
+    logout()
+    router.push("/")
+  }
+
   // Filter experiences by tab
   const getFilteredExperiences = (tab: string) => {
     if (tab === "all") return experiences
@@ -768,9 +775,8 @@ export default function ModerationPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto" />
-          <p className="text-muted-foreground">Loading submissions...</p>
+        <div className="text-center">
+          <div className="text-xl font-medium text-foreground">Loading...</div>
         </div>
       </div>
     )
@@ -779,25 +785,28 @@ export default function ModerationPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-card shadow-sm border-b sticky top-0 z-40">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-3">
-              <Button asChild variant="ghost" size="icon">
+              <Button variant="ghost" asChild>
                 <Link href="/admin">
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Back to Admin
                 </Link>
               </Button>
               <div>
-                <h1 className="text-xl font-bold text-foreground">
-                  Submission Moderation
-                </h1>
-                <p className="text-xs text-muted-foreground hidden sm:block">
-                  Review and manage student submissions
-                </p>
+                <h1 className="text-xl font-bold text-foreground">Submission Moderation</h1>
+                <p className="text-sm text-muted-foreground">Review and manage student submissions</p>
               </div>
             </div>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <Button onClick={handleLogout} variant="outline" size="sm">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
