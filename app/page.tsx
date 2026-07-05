@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CompanyCard } from "../components/company-card"
-import { companies } from "../data/companies"
-import { getExperiences, getBatches, getBatchByYear } from "../lib/database"
+import { getCompanies, getExperiences, getBatches, getBatchByYear } from "../lib/database"
 import { Building2, Users, Search, GraduationCap, Menu } from "lucide-react"
 import type { Company, Batch, Experience } from "../types/company"
 import { Footer } from "../components/footer"
@@ -21,6 +20,7 @@ import { PageTracking } from "./page-tracking"
 export default function HomePage() {
   const [viewMode, setViewMode] = useState("companies") // 'companies' or 'people'
   const [allExperiences, setAllExperiences] = useState<Experience[]>([])
+  const [companies, setCompanies] = useState<Company[]>([])
   const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([])
   const [companiesWithExperiences, setCompaniesWithExperiences] = useState<Company[]>([])
   const [batches, setBatches] = useState<Batch[]>([])
@@ -31,13 +31,18 @@ export default function HomePage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [fetchedBatches, fetchedExperiences] = await Promise.all([getBatches(), getExperiences()])
+        const [fetchedBatches, fetchedExperiences, fetchedCompanies] = await Promise.all([
+          getBatches(),
+          getExperiences(),
+          getCompanies(),
+        ])
 
         const activeBatches = fetchedBatches.filter((batch) => batch.isActive)
         setBatches(activeBatches)
         setAllExperiences(fetchedExperiences)
+        setCompanies(fetchedCompanies)
 
-        const defaultBatch = (await getBatchByYear(2026)) || activeBatches[0]
+        const defaultBatch = (await getBatchByYear(2027)) || activeBatches[0]
         if (defaultBatch) {
           setSelectedBatch(defaultBatch)
         }

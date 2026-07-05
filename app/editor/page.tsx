@@ -32,12 +32,12 @@ import {
 } from "lucide-react"
 
 // Data and Logic
-import { companies } from "../../data/companies"
-import { saveExperience, getBatchByYear } from "../../lib/database"
+import { getActiveBatch, getCompanies, saveExperience, getBatchByYear } from "../../lib/database"
 import { isAuthenticated } from "../../lib/auth"
 import Link from "next/link"
 import NextImage from "next/image" // Renamed to avoid conflict
 import DOMPurify from "dompurify"
+import type { Company } from "../../types/company"
 
 // Toolbar Component (defined inside for single-file structure)
 const Toolbar = ({ editor }: { editor: Editor }) => {
@@ -92,6 +92,7 @@ export default function EditorPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const preselectedCompany = searchParams.get("company")
+  const preselectedBatch = searchParams.get("batch")
 
   const [selectedCompany, setSelectedCompany] = useState(preselectedCompany || "")
   const [title, setTitle] = useState("")
@@ -102,6 +103,7 @@ export default function EditorPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState("")
+  const [companies, setCompanies] = useState<Company[]>([])
   const [selectionStatus, setSelectionStatus] = useState<"selected" | "not-selected" | "">("")
   const [ctc, setCTC] = useState("")
   const [offerType, setOfferType] = useState("")
@@ -181,17 +183,28 @@ export default function EditorPage() {
     }
     setAuthChecked(true)
     async function setDefaultBatch() {
-      if (!preselectedCompany) {
-        try {
-          const defaultBatch = await getBatchByYear(2026)
-          if (defaultBatch) setSelectedBatch(defaultBatch.id)
-        } catch (error) {
-          console.error("Error setting default batch:", error)
-        }
+      if (preselectedBatch) {
+        setSelectedBatch(preselectedBatch)
+        return
+      }
+
+      try {
+        const defaultBatch = (await getBatchByYear(2027)) || (await getActiveBatch())
+        if (defaultBatch) setSelectedBatch(defaultBatch.id)
+      } catch (error) {
+        console.error("Error setting default batch:", error)
+      }
+    }
+    async function loadCompanies() {
+      try {
+        setCompanies(await getCompanies())
+      } catch (error) {
+        console.error("Error loading companies:", error)
       }
     }
     setDefaultBatch()
-  }, [router, preselectedCompany])
+    loadCompanies()
+  }, [router, preselectedBatch])
 
   const handleSave = async () => {
     if (!selectedBatch || !selectedCompany || !title || !role || !author || !selectionStatus) {

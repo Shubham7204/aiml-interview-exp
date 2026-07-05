@@ -5,14 +5,13 @@ import { notFound } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { companies } from "../../../../../data/companies"
-import { getExperiencesByBatchAndCompany, getBatchById } from "../../../../../lib/database"
+import { getCompanyById, getExperiencesByBatchAndCompany, getBatchById } from "../../../../../lib/database"
 import { isAuthenticated } from "../../../../../lib/auth"
 import { ThemeToggle } from "../../../../../components/theme-toggle"
 import Image from "next/image"
 import Link from "next/link"
 import { ArrowLeft, ExternalLink, MapPin, Users, PlusCircle } from "lucide-react"
-import type { Experience, Batch } from "../../../../../types/company"
+import type { Company, Experience, Batch } from "../../../../../types/company"
 
 interface BatchCompanyClientPageProps {
   batchId: string
@@ -21,6 +20,7 @@ interface BatchCompanyClientPageProps {
 
 function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPageProps) {
   const [experiences, setExperiences] = useState<Experience[]>([])
+  const [company, setCompany] = useState<Company | null>(null)
   const [batch, setBatch] = useState<Batch | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -31,11 +31,13 @@ function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPagePr
 
     async function loadData() {
       try {
-        const [batchData, experienceData] = await Promise.all([
+        const [companyData, batchData, experienceData] = await Promise.all([
+          getCompanyById(companyId),
           getBatchById(batchId),
           getExperiencesByBatchAndCompany(batchId, companyId),
         ])
 
+        setCompany(companyData)
         setBatch(batchData)
         setExperiences(experienceData)
       } catch (error) {
@@ -48,21 +50,19 @@ function BatchCompanyClientPage({ batchId, companyId }: BatchCompanyClientPagePr
     loadData()
   }, [batchId, companyId])
 
-  const company = companies.find((c) => c.id === companyId)
-
-  if (!company) {
-    notFound()
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="text-xl font-medium text-foreground">Loading experiences...</div>
-          <p className="text-muted-foreground mt-2">Please wait while we fetch {company.name} experiences.</p>
+          <p className="text-muted-foreground mt-2">Please wait while we fetch company experiences.</p>
         </div>
       </div>
     )
+  }
+
+  if (!company) {
+    notFound()
   }
 
   return (

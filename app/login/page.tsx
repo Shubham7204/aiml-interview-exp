@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { login } from "../../lib/auth"
 import { Users, LogIn } from "lucide-react"
+import { ThemeToggle } from "../../components/theme-toggle"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -33,16 +34,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="absolute right-4 top-4">
+        <ThemeToggle />
+      </div>
       <div className="max-w-md w-full mx-4">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+              <Users className="w-6 h-6 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold">AIML 26 Admin</h1>
+            <h1 className="text-2xl font-bold text-foreground">AIML Admin</h1>
           </div>
-          <p className="text-gray-600">Login to manage placement experiences</p>
+          <p className="text-muted-foreground">Login to manage placement experiences</p>
         </div>
 
         <Card>

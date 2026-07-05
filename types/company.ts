@@ -6,6 +6,8 @@ export interface Company {
   website?: string
   industry: string
   experienceCount: number
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface Batch {

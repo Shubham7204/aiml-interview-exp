@@ -30,10 +30,9 @@ import {
 import { CompanySelector } from "../../../components/company-selector"
 import { BatchSelector } from "../../../components/batch-selector"
 import { ThemeToggle } from "../../../components/theme-toggle"
-import { companies } from "../../../data/companies"
-import { getExperienceById, updateExperience } from "../../../lib/database"
+import { getCompanies, getExperienceById, updateExperience } from "../../../lib/database"
 import { isAuthenticated } from "../../../lib/auth"
-import type { Experience } from "../../../types/company"
+import type { Company, Experience } from "../../../types/company"
 import Link from "next/link"
 import NextImage from "next/image" // Renamed to avoid conflict
 import DOMPurify from "dompurify"
@@ -117,6 +116,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   const [selectionStatus, setSelectionStatus] = useState<Experience["selectionStatus"] | "">("")
   const [ctc, setCTC] = useState("")
   const [offerType, setOfferType] = useState("")
+  const [companies, setCompanies] = useState<Company[]>([])
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
@@ -186,7 +186,8 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     setAuthChecked(true)
     async function loadExperience() {
       try {
-        const foundExperience = await getExperienceById(id)
+        const [foundExperience, companyData] = await Promise.all([getExperienceById(id), getCompanies()])
+        setCompanies(companyData)
         if (foundExperience) {
           setExperience(foundExperience)
           setSelectedCompany(foundExperience.companyId)
