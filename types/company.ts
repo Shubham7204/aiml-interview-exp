@@ -29,10 +29,38 @@ export interface Experience {
   duration: string
   content: string
   author: string
+  authorEmail?: string | null
   createdAt: string
+  updatedAt?: string | null
   tags: string[]
   selectionStatus: "selected" | "not-selected"
   ctc?: number | null
   offerType?: string | null
   batch?: Batch
+  // New fields
+  status: "pending" | "approved" | "rejected" | "needs_revision"
+  sapId?: string | null
+  experienceType?: "internship" | "placement" | null
+  difficulty?: "easy" | "medium" | "hard" | null
+  topicsCovered?: string[]
+  tips?: string | null
+  adminReviewNote?: string | null
+}
+
+export interface ExperienceRound {
+  id: string
+  experienceId?: string
+  roundNumber: number
+  roundName: string
+  roundType: string
+  duration?: string | null
+  topics?: string | null
+  description?: string | null
+}
+
+export interface ExperienceResource {
+  id: string
+  experienceId?: string
+  resourceName: string
+  resourceLink?: string | null
 }

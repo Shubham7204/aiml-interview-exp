@@ -8,7 +8,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react"
 import StarterKit from "@tiptap/starter-kit"
 import Underline from "@tiptap/extension-underline"
 import TiptapLink from "@tiptap/extension-link"
-import TiptapImage from "@tiptap/extension-image" // Renamed to avoid JSX conflict
+import TiptapImage from "@tiptap/extension-image"
 import Table from "@tiptap/extension-table"
 import TableCell from "@tiptap/extension-table-cell"
 import TableHeader from "@tiptap/extension-table-header"
@@ -35,7 +35,7 @@ import {
 import { getActiveBatch, getCompanies, saveExperience, getBatchByYear } from "../../lib/database"
 import { isAuthenticated } from "../../lib/auth"
 import Link from "next/link"
-import NextImage from "next/image" // Renamed to avoid conflict
+import NextImage from "next/image"
 import DOMPurify from "dompurify"
 import type { Company } from "../../types/company"
 
@@ -126,34 +126,26 @@ export default function EditorPage() {
       TableHeader,
       TableCell,
     ],
-    content: `<h2>Overview</h2><p>I had the opportunity to interview for the <strong>Software Development Engineer (SDE)</strong> position at [Company Name]. The process consisted of an Online Assessment followed by two interview rounds.</p><h3>Online Assessment - Date</h3><p>The Online Assessment was conducted on [Date] with a duration of [Duration]. It consisted of:</p><ul><li>Aptitude questions</li><li>DSA questions</li><li>SQL questions</li></ul><h3>Technical Interview Round</h3><p><strong>Duration:</strong> [Duration]</p><p>The interview started with a brief introduction and resume discussion, then moved to technical questions.</p><h3>Final Results</h3><p>Share the outcome and timeline...</p><h3>Key Takeaways & Advice</h3><p>Here are some key takeaways and advice for future candidates:</p><table><thead><tr><th>Topic</th><th>Advice</th></tr></thead><tbody><tr><td>DSA</td><td>Focus on problem-solving and optimization. Practice on LeetCode.</td></tr><tr><td>Communication</td><td>Explain your approach clearly. Think out loud.</td></tr><tr><td>Time Management</td><td>Practice solving problems within set time limits.</td></tr></tbody></table>`,
+    content: `<h2>Overview</h2><p>I had the opportunity to interview for the <strong>Software Development Engineer (SDE)</strong> position at [Company Name]. The process consisted of an Online Assessment followed by two interview rounds.</p><h3>Online Assessment - Date</h3><p>The Online Assessment was conducted on [Date] with a duration of [Duration]. It consisted of:</p><ul><li>Aptitude questions</li><li>DSA questions</li><li>SQL questions</li></ul><h3>Technical Interview Round</h3><p><strong>Duration:</strong> [Duration]</p><p>The interview started with a brief introduction and resume discussion, then moved to technical questions.</p><h3>Final Results</h3><p>Share the outcome and timeline...</p><h3>Key Takeaways &amp; Advice</h3><p>Here are some key takeaways and advice for future candidates:</p><table><thead><tr><th>Topic</th><th>Advice</th></tr></thead><tbody><tr><td>DSA</td><td>Focus on problem-solving and optimization. Practice on LeetCode.</td></tr><tr><td>Communication</td><td>Explain your approach clearly. Think out loud.</td></tr><tr><td>Time Management</td><td>Practice solving problems within set time limits.</td></tr></tbody></table>`,
     editorProps: {
       attributes: {
         class: "prose dark:prose-invert prose-sm sm:prose-sm lg:prose-base xl:prose-base min-h-[400px] w-full p-4 focus:outline-none",
       },
       handlePaste: (view, event, slice) => {
-        // Check if the pasted content contains files
         const files = event.clipboardData?.files;
         if (!files || files.length === 0) {
-          return false; // No files, let Tiptap handle it
+          return false;
         }
-
-        // Check if the first file is an image
         const imageFiles = Array.from(files).filter((file) => /image/i.test(file.type));
         if (imageFiles.length === 0) {
-          return false; // No images, let Tiptap handle it
+          return false;
         }
-        
-        // Prevent the default paste behavior
         event.preventDefault();
-
-        // For each image, read it as a Base64 data URL and insert it
         imageFiles.forEach(file => {
           const reader = new FileReader();
           reader.onload = (e) => {
             const src = e.target?.result as string;
             if (src) {
-              // Use the editor instance from the component scope
               const editorInstance = editor;
               if (editorInstance) {
                 editorInstance.chain().focus().setImage({ src }).run();
@@ -162,8 +154,7 @@ export default function EditorPage() {
           };
           reader.readAsDataURL(file);
         });
-
-        return true; // We've handled the paste
+        return true;
       },
       transformPastedHTML(html) {
         return DOMPurify.sanitize(html, {
@@ -187,7 +178,6 @@ export default function EditorPage() {
         setSelectedBatch(preselectedBatch)
         return
       }
-
       try {
         const defaultBatch = (await getBatchByYear(2027)) || (await getActiveBatch())
         if (defaultBatch) setSelectedBatch(defaultBatch.id)
@@ -225,6 +215,13 @@ export default function EditorPage() {
         ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null,
         offerType: offerType || null,
         tags: [],
+        status: "approved", // Admin-created experiences are automatically approved
+        authorEmail: null,
+        sapId: null,
+        experienceType: null,
+        difficulty: null,
+        topicsCovered: [],
+        tips: null,
       })
       alert("Experience saved successfully!")
       router.push(`/company/${selectedCompany}`)

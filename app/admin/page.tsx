@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload, Building2 } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload, ClipboardCheck, Building2 } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { ThemeToggle } from "../../components/theme-toggle"
 import { useRouter } from "next/navigation"
 
 import { supabase } from "@/lib/supabase";
+import { getPendingExperiences } from "@/lib/database";
 
 function PDFUploadAdmin() {
   const [uploading, setUploading] = useState(false);
@@ -61,6 +62,7 @@ function PDFUploadAdmin() {
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function AdminPage() {
       router.push("/login")
     } else {
       setLoading(false)
+      getPendingExperiences().then((pending) => setPendingCount(pending.length)).catch(console.error)
     }
   }, [router])
 
@@ -118,20 +121,21 @@ export default function AdminPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* PDF Upload Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
-                <Upload className="w-5 h-5 text-red-600 dark:text-red-400" />
-              </div>
-              <CardTitle>Upload Important PDF</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <PDFUploadAdmin />
-          </CardContent>
-        </Card>
+            {/* PDF Upload Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-lg flex items-center justify-center">
+                    <Upload className="w-5 h-5 text-red-600 dark:text-red-400" />
+                  </div>
+                  <CardTitle>Upload Important PDF</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <PDFUploadAdmin />
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -142,7 +146,7 @@ export default function AdminPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">Create a new placement experience for the latest AIML batch.</p>
+                <p className="text-muted-foreground mb-4">Create a new placement experience for AIML 26 students.</p>
                 <Button asChild className="w-full">
                   <Link href="/editor">
                     <PlusCircle className="w-4 h-4 mr-2" />
@@ -166,7 +170,7 @@ export default function AdminPage() {
                 <Button asChild variant="outline" className="w-full">
                   <Link href="/">
                     <Eye className="w-4 h-4 mr-2" />
-                    View Latest Batch
+                    View AIML 26
                   </Link>
                 </Button>
               </CardContent>
@@ -191,6 +195,7 @@ export default function AdminPage() {
                 </Button>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -210,25 +215,34 @@ export default function AdminPage() {
                 </Button>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                    <ClipboardCheck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                   </div>
-                  <CardTitle>Manage Companies</CardTitle>
+                  <CardTitle>Review Submissions</CardTitle>
+                  {pendingCount > 0 && (
+                    <span className="ml-auto inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {pendingCount}
+                    </span>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground mb-4">Add company logos, descriptions, websites, and industries.</p>
-                <Button asChild variant="outline" className="w-full">
-                  <Link href="/admin/companies">
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Manage Companies
+                <p className="text-muted-foreground mb-4">
+                  {pendingCount > 0 ? `${pendingCount} submission(s) awaiting review.` : "No pending submissions."}
+                </p>
+                <Button asChild variant={pendingCount > 0 ? "default" : "outline"} className="w-full">
+                  <Link href="/admin/moderation">
+                    <ClipboardCheck className="w-4 h-4 mr-2" />
+                    Review Submissions
                   </Link>
                 </Button>
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
