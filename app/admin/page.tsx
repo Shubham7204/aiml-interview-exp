@@ -216,6 +216,28 @@ export default function AdminPage() {
               </CardContent>
             </Card>
 
+            {/* Manage Companies Card */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-sky-100 dark:bg-sky-900/20 rounded-lg flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                  </div>
+                  <CardTitle>Manage Companies</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">Add new companies and upload their logos.</p>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/admin/companies">
+                    <Building2 className="w-4 h-4 mr-2" />
+                    Manage Companies
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+
             <Card>
               <CardHeader>
                 <div className="flex items-center gap-3">
