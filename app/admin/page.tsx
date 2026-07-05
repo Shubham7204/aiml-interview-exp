@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload } from "lucide-react"
+import { PlusCircle, LogOut, Users, Eye, GraduationCap, LineChart, Upload, ClipboardCheck } from "lucide-react"
 import Link from "next/link"
 import { isAuthenticated, logout } from "../../lib/auth"
 import { ThemeToggle } from "../../components/theme-toggle"
 import { useRouter } from "next/navigation"
 
 import { supabase } from "@/lib/supabase";
+import { getPendingExperiences } from "@/lib/database";
 
 function PDFUploadAdmin() {
   const [uploading, setUploading] = useState(false);
@@ -61,6 +62,7 @@ function PDFUploadAdmin() {
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(true)
+  const [pendingCount, setPendingCount] = useState(0)
   const router = useRouter()
 
   useEffect(() => {
@@ -68,6 +70,7 @@ export default function AdminPage() {
       router.push("/login")
     } else {
       setLoading(false)
+      getPendingExperiences().then((pending) => setPendingCount(pending.length)).catch(console.error)
     }
   }, [router])
 
@@ -206,6 +209,32 @@ export default function AdminPage() {
                   <Link href="/admin/batches">
                     <GraduationCap className="w-4 h-4 mr-2" />
                     Manage Batches
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-900/20 rounded-lg flex items-center justify-center">
+                    <ClipboardCheck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <CardTitle>Review Submissions</CardTitle>
+                  {pendingCount > 0 && (
+                    <span className="ml-auto inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 rounded-full">
+                      {pendingCount}
+                    </span>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground mb-4">
+                  {pendingCount > 0 ? `${pendingCount} submission(s) awaiting review.` : "No pending submissions."}
+                </p>
+                <Button asChild variant={pendingCount > 0 ? "default" : "outline"} className="w-full">
+                  <Link href="/admin/moderation">
+                    <ClipboardCheck className="w-4 h-4 mr-2" />
+                    Review Submissions
                   </Link>
                 </Button>
               </CardContent>

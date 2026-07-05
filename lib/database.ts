@@ -1,7 +1,66 @@
 import { supabase } from "./supabase"
-import type { Experience, Batch } from "../types/company"
+import type { Experience, Batch, ExperienceRound, ExperienceResource } from "../types/company"
 
+// ============================================
+// Helper: Map DB row to Experience object
+// ============================================
+function mapExperience(item: any): Experience {
+  return {
+    id: item.id,
+    batchId: item.batch_id,
+    companyId: item.company_id,
+    title: item.title,
+    role: item.role,
+    duration: item.duration,
+    author: item.author,
+    authorEmail: item.author_email,
+    content: item.content,
+    selectionStatus: item.selection_status,
+    ctc: item.ctc,
+    offerType: item.offer_type,
+    tags: item.tags || [],
+    createdAt: item.created_at,
+    // Moderation fields
+    status: item.status || "approved",
+    adminReviewNote: item.admin_review_note,
+    // New submission fields
+    sapId: item.sap_id,
+    experienceType: item.experience_type,
+    difficulty: item.difficulty,
+    topicsCovered: item.topics_covered || [],
+    tips: item.tips,
+    updatedAt: item.updated_at,
+    // Batch relation
+    batch: item.batches
+      ? {
+          id: item.batches.id,
+          year: item.batches.year,
+          name: item.batches.name,
+          description: item.batches.description,
+          isActive: item.batches.is_active,
+          createdAt: item.batches.created_at,
+          updatedAt: item.batches.updated_at,
+        }
+      : undefined,
+  }
+}
+
+const EXPERIENCE_SELECT = `
+  *,
+  batches (
+    id,
+    year,
+    name,
+    description,
+    is_active,
+    created_at,
+    updated_at
+  )
+`
+
+// ============================================
 // Batch management functions
+// ============================================
 export async function getBatches(): Promise<Batch[]> {
   const { data, error } = await supabase.from("batches").select("*").order("year", { ascending: false })
 
@@ -123,7 +182,10 @@ export async function createBatch(batch: Omit<Batch, "id" | "createdAt" | "updat
   }
 }
 
-// Updated experience functions
+// ============================================
+// Experience CRUD functions
+// ============================================
+
 export async function saveExperience(experience: Omit<Experience, "id" | "createdAt">): Promise<Experience> {
   const { data, error } = await supabase
     .from("experiences")
@@ -135,25 +197,22 @@ export async function saveExperience(experience: Omit<Experience, "id" | "create
         role: experience.role,
         duration: experience.duration,
         author: experience.author,
+        author_email: experience.authorEmail || null,
         content: experience.content,
         selection_status: experience.selectionStatus,
         ctc: experience.ctc,
         offer_type: experience.offerType,
         tags: experience.tags || [],
+        status: experience.status || "pending",
+        admin_review_note: experience.adminReviewNote || null,
+        sap_id: experience.sapId || null,
+        experience_type: experience.experienceType || null,
+        difficulty: experience.difficulty || null,
+        topics_covered: experience.topicsCovered || [],
+        tips: experience.tips || null,
       },
     ])
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .single()
 
   if (error) {
@@ -161,32 +220,7 @@ export async function saveExperience(experience: Omit<Experience, "id" | "create
     throw new Error("Failed to save experience")
   }
 
-  return {
-    id: data.id,
-    batchId: data.batch_id,
-    companyId: data.company_id,
-    title: data.title,
-    role: data.role,
-    duration: data.duration,
-    author: data.author,
-    content: data.content,
-    selectionStatus: data.selection_status,
-    ctc: data.ctc,
-    offerType: data.offer_type,
-    tags: data.tags,
-    createdAt: data.created_at,
-    batch: data.batches
-      ? {
-          id: data.batches.id,
-          year: data.batches.year,
-          name: data.batches.name,
-          description: data.batches.description,
-          isActive: data.batches.is_active,
-          createdAt: data.batches.created_at,
-          updatedAt: data.batches.updated_at,
-        }
-      : undefined,
-  }
+  return mapExperience(data)
 }
 
 export async function updateExperience(experience: Experience): Promise<Experience> {
@@ -199,26 +233,23 @@ export async function updateExperience(experience: Experience): Promise<Experien
       role: experience.role,
       duration: experience.duration,
       author: experience.author,
+      author_email: experience.authorEmail || null,
       content: experience.content,
       selection_status: experience.selectionStatus,
       ctc: experience.ctc,
       offer_type: experience.offerType,
       tags: experience.tags || [],
+      status: experience.status,
+      admin_review_note: experience.adminReviewNote || null,
+      sap_id: experience.sapId || null,
+      experience_type: experience.experienceType || null,
+      difficulty: experience.difficulty || null,
+      topics_covered: experience.topicsCovered || [],
+      tips: experience.tips || null,
       updated_at: new Date().toISOString(),
     })
     .eq("id", experience.id)
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .single()
 
   if (error) {
@@ -226,32 +257,7 @@ export async function updateExperience(experience: Experience): Promise<Experien
     throw new Error("Failed to update experience")
   }
 
-  return {
-    id: data.id,
-    batchId: data.batch_id,
-    companyId: data.company_id,
-    title: data.title,
-    role: data.role,
-    duration: data.duration,
-    author: data.author,
-    content: data.content,
-    selectionStatus: data.selection_status,
-    ctc: data.ctc,
-    offerType: data.offer_type,
-    tags: data.tags,
-    createdAt: data.created_at,
-    batch: data.batches
-      ? {
-          id: data.batches.id,
-          year: data.batches.year,
-          name: data.batches.name,
-          description: data.batches.description,
-          isActive: data.batches.is_active,
-          createdAt: data.batches.created_at,
-          updatedAt: data.batches.updated_at,
-        }
-      : undefined,
-  }
+  return mapExperience(data)
 }
 
 export async function deleteExperience(experienceId: string): Promise<void> {
@@ -263,21 +269,15 @@ export async function deleteExperience(experienceId: string): Promise<void> {
   }
 }
 
+// ============================================
+// Public-facing queries (approved only)
+// ============================================
+
 export async function getExperiences(): Promise<Experience[]> {
   const { data, error } = await supabase
     .from("experiences")
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -285,50 +285,15 @@ export async function getExperiences(): Promise<Experience[]> {
     throw new Error("Failed to fetch experiences")
   }
 
-  return data.map((item) => ({
-    id: item.id,
-    batchId: item.batch_id,
-    companyId: item.company_id,
-    title: item.title,
-    role: item.role,
-    duration: item.duration,
-    author: item.author,
-    content: item.content,
-    selectionStatus: item.selection_status,
-    ctc: item.ctc,
-    offerType: item.offer_type,
-    tags: item.tags,
-    createdAt: item.created_at,
-    batch: item.batches
-      ? {
-          id: item.batches.id,
-          year: item.batches.year,
-          name: item.batches.name,
-          description: item.batches.description,
-          isActive: item.batches.is_active,
-          createdAt: item.batches.created_at,
-          updatedAt: item.batches.updated_at,
-        }
-      : undefined,
-  }))
+  return data.map(mapExperience)
 }
 
 export async function getExperiencesByBatch(batchId: string): Promise<Experience[]> {
   const { data, error } = await supabase
     .from("experiences")
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .eq("batch_id", batchId)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -336,51 +301,15 @@ export async function getExperiencesByBatch(batchId: string): Promise<Experience
     throw new Error("Failed to fetch batch experiences")
   }
 
-  return data.map((item) => ({
-    id: item.id,
-    batchId: item.batch_id,
-    companyId: item.company_id,
-    title: item.title,
-    role: item.role,
-    duration: item.duration,
-    author: item.author,
-    content: item.content,
-    selectionStatus: item.selection_status,
-    ctc: item.ctc,
-    offerType: item.offer_type,
-    tags: item.tags,
-    createdAt: item.created_at,
-    batch: item.batches
-      ? {
-          id: item.batches.id,
-          year: item.batches.year,
-          name: item.batches.name,
-          description: item.batches.description,
-          isActive: item.batches.is_active,
-          createdAt: item.batches.created_at,
-          updatedAt: item.batches.updated_at,
-        }
-      : undefined,
-  }))
+  return data.map(mapExperience)
 }
 
-// Backward compatibility function - gets experiences for all batches by company
 export async function getExperiencesByCompany(companyId: string): Promise<Experience[]> {
   const { data, error } = await supabase
     .from("experiences")
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .eq("company_id", companyId)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -388,51 +317,16 @@ export async function getExperiencesByCompany(companyId: string): Promise<Experi
     throw new Error("Failed to fetch company experiences")
   }
 
-  return data.map((item) => ({
-    id: item.id,
-    batchId: item.batch_id,
-    companyId: item.company_id,
-    title: item.title,
-    role: item.role,
-    duration: item.duration,
-    author: item.author,
-    content: item.content,
-    selectionStatus: item.selection_status,
-    ctc: item.ctc,
-    offerType: item.offer_type,
-    tags: item.tags,
-    createdAt: item.created_at,
-    batch: item.batches
-      ? {
-          id: item.batches.id,
-          year: item.batches.year,
-          name: item.batches.name,
-          description: item.batches.description,
-          isActive: item.batches.is_active,
-          createdAt: item.batches.created_at,
-          updatedAt: item.batches.updated_at,
-        }
-      : undefined,
-  }))
+  return data.map(mapExperience)
 }
 
 export async function getExperiencesByBatchAndCompany(batchId: string, companyId: string): Promise<Experience[]> {
   const { data, error } = await supabase
     .from("experiences")
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .eq("batch_id", batchId)
     .eq("company_id", companyId)
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
 
   if (error) {
@@ -440,49 +334,13 @@ export async function getExperiencesByBatchAndCompany(batchId: string, companyId
     throw new Error("Failed to fetch company experiences")
   }
 
-  return data.map((item) => ({
-    id: item.id,
-    batchId: item.batch_id,
-    companyId: item.company_id,
-    title: item.title,
-    role: item.role,
-    duration: item.duration,
-    author: item.author,
-    content: item.content,
-    selectionStatus: item.selection_status,
-    ctc: item.ctc,
-    offerType: item.offer_type,
-    tags: item.tags,
-    createdAt: item.created_at,
-    batch: item.batches
-      ? {
-          id: item.batches.id,
-          year: item.batches.year,
-          name: item.batches.name,
-          description: item.batches.description,
-          isActive: item.batches.is_active,
-          createdAt: item.batches.created_at,
-          updatedAt: item.batches.updated_at,
-        }
-      : undefined,
-  }))
+  return data.map(mapExperience)
 }
 
 export async function getExperienceById(id: string): Promise<Experience | null> {
   const { data, error } = await supabase
     .from("experiences")
-    .select(`
-      *,
-      batches (
-        id,
-        year,
-        name,
-        description,
-        is_active,
-        created_at,
-        updated_at
-      )
-    `)
+    .select(EXPERIENCE_SELECT)
     .eq("id", id)
     .single()
 
@@ -494,33 +352,216 @@ export async function getExperienceById(id: string): Promise<Experience | null> 
     throw new Error("Failed to fetch experience")
   }
 
-  return {
-    id: data.id,
-    batchId: data.batch_id,
-    companyId: data.company_id,
-    title: data.title,
-    role: data.role,
-    duration: data.duration,
-    author: data.author,
-    content: data.content,
-    selectionStatus: data.selection_status,
-    ctc: data.ctc,
-    offerType: data.offer_type,
-    tags: data.tags,
-    createdAt: data.created_at,
-    batch: data.batches
-      ? {
-          id: data.batches.id,
-          year: data.batches.year,
-          name: data.batches.name,
-          description: data.batches.description,
-          isActive: data.batches.is_active,
-          createdAt: data.batches.created_at,
-          updatedAt: data.batches.updated_at,
-        }
-      : undefined,
+  return mapExperience(data)
+}
+
+// ============================================
+// Admin / Moderation queries (all statuses)
+// ============================================
+
+export async function getAllExperiencesForAdmin(): Promise<Experience[]> {
+  const { data, error } = await supabase
+    .from("experiences")
+    .select(EXPERIENCE_SELECT)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching all experiences:", error)
+    throw new Error("Failed to fetch all experiences")
+  }
+
+  return data.map(mapExperience)
+}
+
+export async function getExperiencesByStatus(status: string): Promise<Experience[]> {
+  const { data, error } = await supabase
+    .from("experiences")
+    .select(EXPERIENCE_SELECT)
+    .eq("status", status)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching experiences by status:", error)
+    throw new Error("Failed to fetch experiences by status")
+  }
+
+  return data.map(mapExperience)
+}
+
+export async function getPendingExperiences(): Promise<Experience[]> {
+  return getExperiencesByStatus("pending")
+}
+
+export async function updateExperienceStatus(
+  id: string,
+  status: "approved" | "rejected" | "needs_revision",
+  reviewNote?: string
+): Promise<Experience> {
+  const { data, error } = await supabase
+    .from("experiences")
+    .update({
+      status,
+      admin_review_note: reviewNote || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select(EXPERIENCE_SELECT)
+    .single()
+
+  if (error) {
+    console.error("Error updating experience status:", error)
+    throw new Error("Failed to update experience status")
+  }
+
+  return mapExperience(data)
+}
+
+// ============================================
+// Experience Rounds
+// ============================================
+
+export async function saveExperienceRounds(
+  experienceId: string,
+  rounds: Omit<ExperienceRound, "id">[]
+): Promise<ExperienceRound[]> {
+  if (rounds.length === 0) return []
+
+  const insertData = rounds.map((round) => ({
+    experience_id: experienceId,
+    round_number: round.roundNumber,
+    round_name: round.roundName,
+    round_type: round.roundType,
+    duration: round.duration || null,
+    topics: round.topics || null,
+    description: round.description || null,
+  }))
+
+  const { data, error } = await supabase
+    .from("experience_rounds")
+    .insert(insertData)
+    .select()
+
+  if (error) {
+    console.error("Error saving rounds:", error)
+    throw new Error("Failed to save experience rounds")
+  }
+
+  return data.map((item: any) => ({
+    id: item.id,
+    experienceId: item.experience_id,
+    roundNumber: item.round_number,
+    roundName: item.round_name,
+    roundType: item.round_type,
+    duration: item.duration,
+    topics: item.topics,
+    description: item.description,
+  }))
+}
+
+export async function getExperienceRounds(experienceId: string): Promise<ExperienceRound[]> {
+  const { data, error } = await supabase
+    .from("experience_rounds")
+    .select("*")
+    .eq("experience_id", experienceId)
+    .order("round_number", { ascending: true })
+
+  if (error) {
+    console.error("Error fetching rounds:", error)
+    throw new Error("Failed to fetch experience rounds")
+  }
+
+  return data.map((item: any) => ({
+    id: item.id,
+    experienceId: item.experience_id,
+    roundNumber: item.round_number,
+    roundName: item.round_name,
+    roundType: item.round_type,
+    duration: item.duration,
+    topics: item.topics,
+    description: item.description,
+  }))
+}
+
+export async function deleteExperienceRounds(experienceId: string): Promise<void> {
+  const { error } = await supabase
+    .from("experience_rounds")
+    .delete()
+    .eq("experience_id", experienceId)
+
+  if (error) {
+    console.error("Error deleting rounds:", error)
+    throw new Error("Failed to delete experience rounds")
   }
 }
+
+// ============================================
+// Experience Resources
+// ============================================
+
+export async function saveExperienceResources(
+  experienceId: string,
+  resources: Omit<ExperienceResource, "id">[]
+): Promise<ExperienceResource[]> {
+  if (resources.length === 0) return []
+
+  const insertData = resources.map((resource) => ({
+    experience_id: experienceId,
+    resource_name: resource.resourceName,
+    resource_link: resource.resourceLink || null,
+  }))
+
+  const { data, error } = await supabase
+    .from("experience_resources")
+    .insert(insertData)
+    .select()
+
+  if (error) {
+    console.error("Error saving resources:", error)
+    throw new Error("Failed to save experience resources")
+  }
+
+  return data.map((item: any) => ({
+    id: item.id,
+    experienceId: item.experience_id,
+    resourceName: item.resource_name,
+    resourceLink: item.resource_link,
+  }))
+}
+
+export async function getExperienceResources(experienceId: string): Promise<ExperienceResource[]> {
+  const { data, error } = await supabase
+    .from("experience_resources")
+    .select("*")
+    .eq("experience_id", experienceId)
+
+  if (error) {
+    console.error("Error fetching resources:", error)
+    throw new Error("Failed to fetch experience resources")
+  }
+
+  return data.map((item: any) => ({
+    id: item.id,
+    experienceId: item.experience_id,
+    resourceName: item.resource_name,
+    resourceLink: item.resource_link,
+  }))
+}
+
+export async function deleteExperienceResources(experienceId: string): Promise<void> {
+  const { error } = await supabase
+    .from("experience_resources")
+    .delete()
+    .eq("experience_id", experienceId)
+
+  if (error) {
+    console.error("Error deleting resources:", error)
+    throw new Error("Failed to delete experience resources")
+  }
+}
+
+// ============================================
+// Utility
+// ============================================
 
 export function generateId(): string {
   return crypto.randomUUID()

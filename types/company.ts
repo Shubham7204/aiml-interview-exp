@@ -33,4 +33,36 @@ export interface Experience {
   ctc?: number | null
   offerType?: string | null
   batch?: Batch
+  // Moderation fields
+  status: "pending" | "approved" | "rejected" | "needs_revision"
+  adminReviewNote?: string | null
+  // New submission fields
+  sapId?: string | null
+  experienceType?: "internship" | "placement" | null
+  difficulty?: "easy" | "medium" | "hard" | null
+  topicsCovered?: string[]
+  tips?: string | null
+  updatedAt?: string
+  // Related data
+  rounds?: ExperienceRound[]
+  resources?: ExperienceResource[]
+  authorEmail?: string | null
+}
+
+export interface ExperienceRound {
+  id: string
+  experienceId?: string
+  roundNumber: number
+  roundName: string
+  roundType: "online_assessment" | "technical" | "hr" | "group_discussion" | "case_study" | "coding" | "other"
+  duration?: string
+  topics?: string
+  description?: string
+}
+
+export interface ExperienceResource {
+  id: string
+  experienceId?: string
+  resourceName: string
+  resourceLink?: string
 }

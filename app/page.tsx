@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { CompanyCard } from "../components/company-card"
 import { companies } from "../data/companies"
 import { getExperiences, getBatches, getBatchByYear } from "../lib/database"
-import { Building2, Users, Search, GraduationCap, Menu } from "lucide-react"
+import { Building2, Users, Search, GraduationCap, Menu, PenLine } from "lucide-react"
 import type { Company, Batch, Experience } from "../types/company"
 import { Footer } from "../components/footer"
 import { ThemeToggle } from "../components/theme-toggle"
@@ -127,6 +127,13 @@ export default function HomePage() {
                 AIML-25 (PDF)
               </Link>
               <Link
+                href="/submit"
+                className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+              >
+                <PenLine className="w-4 h-4" />
+                Submit Experience
+              </Link>
+              <Link
                 href="/companies"
                 className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
               >
@@ -158,6 +165,13 @@ export default function HomePage() {
                     >
                       <GraduationCap className="w-5 h-5 mr-2" />
                       AIML-25
+                    </Link>
+                    <Link
+                      href="/submit"
+                      className="flex items-center gap-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      <PenLine className="w-5 h-5 mr-2" />
+                      Submit Experience
                     </Link>
                     <Link
                       href="/companies"

@@ -23,15 +23,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CompanySelector } from "../../../components/company-selector"
-import { BatchSelector } from "../../../components/batch-selector"
-import { ThemeToggle } from "../../../components/theme-toggle"
+import { CompanySelector } from "../../../../components/company-selector"
+import { BatchSelector } from "../../../../components/batch-selector"
+import { ThemeToggle } from "../../../../components/theme-toggle"
+import { Footer } from "../../../../components/footer"
 
 // Icons
 import {
   Bold, Italic, Strikethrough, Underline as UnderlineIcon, Code, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Image as ImageIcon, Table as TableIcon,
-  Undo, Redo, Pilcrow, ArrowLeft, Save, Plus, Trash2, FileText
+  Undo, Redo, Pilcrow, ArrowLeft, Save, Plus, Trash2, FileText, CheckCircle, AlertTriangle
 } from "lucide-react"
 
 // Logic
@@ -39,13 +40,12 @@ import {
   getExperienceById, updateExperience,
   getExperienceRounds, deleteExperienceRounds, saveExperienceRounds,
   getExperienceResources, deleteExperienceResources, saveExperienceResources
-} from "../../../lib/database"
-import { isAuthenticated } from "../../../lib/auth"
-import { companies } from "../../../data/companies"
+} from "../../../../lib/database"
+import { companies } from "../../../../data/companies"
 import Link from "next/link"
 import NextImage from "next/image"
 import DOMPurify from "dompurify"
-import type { Experience, ExperienceRound, ExperienceResource } from "../../../types/company"
+import type { Experience, ExperienceRound, ExperienceResource } from "../../../../types/company"
 
 const TOPICS = [
   "DSA", "Machine Learning", "Deep Learning", "DBMS/SQL", "OOPs", "OS", "Computer Networks",
@@ -100,21 +100,22 @@ const Toolbar = ({ editor }: { editor: Editor }) => {
   )
 }
 
-interface EditExperiencePageProps {
+interface StudentEditPageProps {
   params: Promise<{ id: string }>
 }
 
-export default function EditExperiencePage({ params }: EditExperiencePageProps) {
+export default function StudentEditPage({ params }: StudentEditPageProps) {
   const { id } = React.use(params)
   const router = useRouter()
   
   const [experience, setExperience] = useState<Experience | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [authChecked, setAuthChecked] = useState(false)
 
   // Basic Info State
   const [author, setAuthor] = useState("")
+  const [authorEmail, setAuthorEmail] = useState("")
   const [sapId, setSapId] = useState("")
   const [selectedCompany, setSelectedCompany] = useState("")
   const [selectedBatch, setSelectedBatch] = useState("")
@@ -126,7 +127,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   const [duration, setDuration] = useState("")
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "">("")
   const [title, setTitle] = useState("")
-  const [status, setStatus] = useState<Experience["status"]>("pending")
+  const [adminNote, setAdminNote] = useState("")
 
   // Topics
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
@@ -189,17 +190,17 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   })
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login")
-      return
-    }
-    setAuthChecked(true)
-    
     async function loadData() {
       try {
         const foundExperience = await getExperienceById(id)
         if (!foundExperience) {
-          router.push("/admin")
+          router.push("/")
+          return
+        }
+
+        // Only allow editing if status is needs_revision
+        if (foundExperience.status !== "needs_revision") {
+          setLoading(false)
           return
         }
 
@@ -207,6 +208,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         
         // Basic Info
         setAuthor(foundExperience.author || "")
+        setAuthorEmail(foundExperience.authorEmail || "")
         setSapId(foundExperience.sapId || "")
         setSelectedCompany(foundExperience.companyId || "")
         setSelectedBatch(foundExperience.batchId || "")
@@ -218,7 +220,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         setDuration(foundExperience.duration || "")
         setDifficulty(foundExperience.difficulty || "")
         setTitle(foundExperience.title || "")
-        setStatus(foundExperience.status || "pending")
+        setAdminNote(foundExperience.adminReviewNote || "")
         setTips(foundExperience.tips || "")
         setSelectedTopics(foundExperience.topicsCovered || [])
 
@@ -294,7 +296,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     e.preventDefault()
     if (!editor || !experience) return
     
-    if (!author || !selectedCompany || !selectedBatch || !role || !selectionStatus || !title) {
+    if (!author || !authorEmail || !selectedCompany || !selectedBatch || !role || !selectionStatus || !title) {
       alert("Please fill in all required fields.")
       return
     }
@@ -307,7 +309,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
 
     setIsSaving(true)
     try {
-      // 1. Update main experience
+      // 1. Update main experience - SET STATUS BACK TO PENDING
       await updateExperience({
         ...experience,
         batchId: selectedBatch,
@@ -316,11 +318,12 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         role, 
         duration, 
         author, 
+        authorEmail,
         content, 
         selectionStatus: selectionStatus as "selected" | "not-selected",
         ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null,
         offerType: offerType || null,
-        status, // keep existing status
+        status: "pending", 
         sapId: sapId || null,
         experienceType: (experienceType as "internship" | "placement") || null,
         difficulty: (difficulty as "easy" | "medium" | "hard") || null,
@@ -342,31 +345,66 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         await saveExperienceResources(experience.id, validResources.map(({ tempId, ...rest }) => rest))
       }
 
-      alert("Experience updated successfully!")
-      router.push(`/experience/${experience.id}`)
+      setIsSuccess(true)
+      window.scrollTo(0, 0)
     } catch (error) {
-      alert("Error updating experience. Please try again.")
+      alert("Error submitting experience. Please try again.")
       console.error(error)
     } finally {
       setIsSaving(false)
     }
   }
 
-  if (!authChecked || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-xl font-medium text-foreground">{!authChecked ? "Checking authentication..." : "Loading experience..."}</div>
+        <div className="text-xl font-medium text-foreground">Loading experience...</div>
       </div>
     )
   }
 
-  if (!experience) {
+  if (experience && experience.status !== "needs_revision" && !isSuccess) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl font-medium text-foreground">Experience not found</p>
-          <Button asChild className="mt-4"><Link href="/admin">Go to Admin</Link></Button>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="bg-card shadow-sm border-b sticky top-0 z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <Button variant="ghost" asChild><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" />Back to Home</Link></Button>
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full text-center p-6 border-orange-200 dark:border-orange-900">
+            <AlertTriangle className="w-12 h-12 text-orange-500 mx-auto mb-4" />
+            <CardTitle>Link Expired or Invalid</CardTitle>
+            <CardDescription className="mt-2 text-base">
+              This submission is currently marked as <strong>{experience.status}</strong>. It can only be edited if an admin explicitly requests a revision.
+            </CardDescription>
+            <Button asChild className="mt-6"><Link href="/">Return to Home</Link></Button>
+          </Card>
+        </main>
+      </div>
+    )
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="bg-card shadow-sm border-b sticky top-0 z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+            <Button variant="ghost" asChild><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" />Back to Home</Link></Button>
+            <ThemeToggle />
+          </div>
+        </header>
+        <main className="flex-1 flex items-center justify-center p-4">
+          <Card className="w-full max-w-lg text-center p-8 border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-900/10">
+            <CheckCircle className="w-16 h-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
+            <CardTitle className="text-2xl text-green-800 dark:text-green-300">Successfully Resubmitted!</CardTitle>
+            <CardDescription className="text-base mt-4">
+              Thank you for updating your interview experience. It has been sent back to the admins for review. You can safely close this page.
+            </CardDescription>
+            <Button asChild className="mt-8"><Link href="/">Return to Home</Link></Button>
+          </Card>
+        </main>
       </div>
     )
   }
@@ -376,9 +414,9 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
       <header className="bg-card shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Button variant="ghost" asChild><Link href={`/experience/${experience.id}`}><ArrowLeft className="w-4 h-4 mr-2" />Back to Experience</Link></Button>
+            <Button variant="ghost" asChild><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" />Back to Home</Link></Button>
             <div className="flex items-center gap-2">
-              <Button onClick={handleSave} size="sm" disabled={isSaving}><Save className="w-4 h-4 mr-2" />{isSaving ? "Updating..." : "Update"}</Button>
+              <Button onClick={handleSave} size="sm" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white"><Save className="w-4 h-4 mr-2" />{isSaving ? "Submitting..." : "Resubmit to Admin"}</Button>
               <ThemeToggle />
             </div>
           </div>
@@ -389,10 +427,19 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
             <FileText className="w-8 h-8 text-primary" />
-            Edit Experience
+            Revise Your Experience
           </h1>
-          <p className="text-muted-foreground">Admin editor for modifying submission details.</p>
+          <p className="text-muted-foreground">Please review the admin note below and make the necessary updates.</p>
         </div>
+
+        {adminNote && (
+          <div className="mb-8 bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
+            <h3 className="flex items-center gap-2 text-lg font-semibold text-orange-800 dark:text-orange-400 mb-2">
+              <AlertTriangle className="w-5 h-5" /> Admin Review Note
+            </h3>
+            <p className="text-orange-700 dark:text-orange-300 whitespace-pre-wrap">{adminNote}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSave} className="space-y-8">
           {/* Section 1: Basic Info */}
@@ -403,6 +450,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                 <div className="space-y-2">
                   <Label htmlFor="author">Student Name *</Label>
                   <Input id="author" value={author} onChange={(e) => setAuthor(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="authorEmail">Email Address (For notifications) *</Label>
+                  <Input id="authorEmail" type="email" value={authorEmail} onChange={(e) => setAuthorEmail(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="sapId">SAP ID</Label>
@@ -463,18 +514,6 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                     </div>
                   </>
                 )}
-                <div className="space-y-2">
-                  <Label>Current Status (Admin)</Label>
-                  <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                    <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="space-y-2 mt-4">
                 <Label>Overall Difficulty</Label>
@@ -619,12 +658,13 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           </Card>
 
           <div className="flex justify-end pt-4 pb-12">
-            <Button type="submit" size="lg" disabled={isSaving} className="w-full sm:w-auto px-8">
-              {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
+            <Button type="submit" size="lg" disabled={isSaving} className="w-full sm:w-auto px-8 bg-green-600 hover:bg-green-700 text-white">
+              {isSaving ? "Submitting..." : <><Save className="w-4 h-4 mr-2" /> Resubmit to Admin</>}
             </Button>
           </div>
         </form>
       </main>
+      <Footer />
     </div>
   )
 }

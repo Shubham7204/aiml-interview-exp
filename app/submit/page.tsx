@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useEditor, EditorContent, type Editor } from "@tiptap/react"
 
@@ -23,29 +23,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { CompanySelector } from "../../../components/company-selector"
-import { BatchSelector } from "../../../components/batch-selector"
-import { ThemeToggle } from "../../../components/theme-toggle"
+import { CompanySelector } from "../../components/company-selector"
+import { BatchSelector } from "../../components/batch-selector"
+import { ThemeToggle } from "../../components/theme-toggle"
+import { Footer } from "../../components/footer"
 
 // Icons
 import {
   Bold, Italic, Strikethrough, Underline as UnderlineIcon, Code, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Image as ImageIcon, Table as TableIcon,
-  Undo, Redo, Pilcrow, ArrowLeft, Save, Plus, Trash2, FileText
+  Undo, Redo, Pilcrow, ArrowLeft, Send, Plus, Trash2, CheckCircle, FileText
 } from "lucide-react"
 
 // Logic
-import { 
-  getExperienceById, updateExperience,
-  getExperienceRounds, deleteExperienceRounds, saveExperienceRounds,
-  getExperienceResources, deleteExperienceResources, saveExperienceResources
-} from "../../../lib/database"
-import { isAuthenticated } from "../../../lib/auth"
-import { companies } from "../../../data/companies"
+import { saveExperience, saveExperienceRounds, saveExperienceResources, getBatchByYear } from "../../lib/database"
+import { companies } from "../../data/companies"
 import Link from "next/link"
-import NextImage from "next/image"
+import Image from "next/image"
 import DOMPurify from "dompurify"
-import type { Experience, ExperienceRound, ExperienceResource } from "../../../types/company"
+import type { ExperienceRound, ExperienceResource } from "../../types/company"
 
 const TOPICS = [
   "DSA", "Machine Learning", "Deep Learning", "DBMS/SQL", "OOPs", "OS", "Computer Networks",
@@ -62,6 +58,11 @@ const ROUND_TYPES = [
   { value: "coding", label: "Coding Round" },
   { value: "other", label: "Other" }
 ]
+
+const TEMPLATES = {
+  placement: `<h2>My Placement Interview Experience</h2><p>Describe your overall interview journey here...</p><h3>Key Questions Asked</h3><ul><li>...</li></ul><h3>What I Learned</h3><ul><li>...</li></ul>`,
+  internship: `<h2>My Internship Interview Experience</h2><p>Describe your overall interview journey here...</p><h3>Key Questions Asked</h3><ul><li>...</li></ul><h3>What I Learned</h3><ul><li>...</li></ul>`
+}
 
 const Toolbar = ({ editor }: { editor: Editor }) => {
   const addImage = useCallback(() => {
@@ -100,21 +101,14 @@ const Toolbar = ({ editor }: { editor: Editor }) => {
   )
 }
 
-interface EditExperiencePageProps {
-  params: Promise<{ id: string }>
-}
-
-export default function EditExperiencePage({ params }: EditExperiencePageProps) {
-  const { id } = React.use(params)
+export default function SubmitExperiencePage() {
   const router = useRouter()
-  
-  const [experience, setExperience] = useState<Experience | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [authChecked, setAuthChecked] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
   // Basic Info State
   const [author, setAuthor] = useState("")
+  const [authorEmail, setAuthorEmail] = useState("")
   const [sapId, setSapId] = useState("")
   const [selectedCompany, setSelectedCompany] = useState("")
   const [selectedBatch, setSelectedBatch] = useState("")
@@ -126,7 +120,6 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
   const [duration, setDuration] = useState("")
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard" | "">("")
   const [title, setTitle] = useState("")
-  const [status, setStatus] = useState<Experience["status"]>("pending")
 
   // Topics
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
@@ -144,6 +137,18 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
 
   const selectedCompanyData = companies.find((c) => c.id === selectedCompany)
 
+  useEffect(() => {
+    async function loadDefaultBatch() {
+      try {
+        const defaultBatch = await getBatchByYear(2026)
+        if (defaultBatch) setSelectedBatch(defaultBatch.id)
+      } catch (error) {
+        console.error("Error setting default batch:", error)
+      }
+    }
+    loadDefaultBatch()
+  }, [])
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
@@ -155,9 +160,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
       TableHeader,
       TableCell,
     ],
+    content: TEMPLATES.placement,
     editorProps: {
       attributes: {
-        class: "prose dark:prose-invert prose-sm sm:prose-sm lg:prose-base xl:prose-base min-h-[400px] w-full p-4 focus:outline-none max-w-none",
+        class: "prose dark:prose-invert prose-sm sm:prose-sm lg:prose-base xl:prose-base min-h-[300px] w-full p-4 focus:outline-none max-w-none",
       },
       handlePaste: (view, event, slice) => {
         const files = event.clipboardData?.files;
@@ -188,74 +194,14 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     immediatelyRender: false,
   })
 
+  // Update template when experience type changes
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login")
-      return
-    }
-    setAuthChecked(true)
-    
-    async function loadData() {
-      try {
-        const foundExperience = await getExperienceById(id)
-        if (!foundExperience) {
-          router.push("/admin")
-          return
-        }
-
-        setExperience(foundExperience)
-        
-        // Basic Info
-        setAuthor(foundExperience.author || "")
-        setSapId(foundExperience.sapId || "")
-        setSelectedCompany(foundExperience.companyId || "")
-        setSelectedBatch(foundExperience.batchId || "")
-        setExperienceType(foundExperience.experienceType || "")
-        setRole(foundExperience.role || "")
-        setSelectionStatus(foundExperience.selectionStatus || "")
-        setCtc(foundExperience.ctc ? String(foundExperience.ctc) : "")
-        setOfferType(foundExperience.offerType || "")
-        setDuration(foundExperience.duration || "")
-        setDifficulty(foundExperience.difficulty || "")
-        setTitle(foundExperience.title || "")
-        setStatus(foundExperience.status || "pending")
-        setTips(foundExperience.tips || "")
-        setSelectedTopics(foundExperience.topicsCovered || [])
-
-        // Set Editor content
-        if (editor && !editor.isDestroyed) {
-          editor.commands.setContent(foundExperience.content)
-        }
-
-        // Fetch and map Rounds
-        const fetchedRounds = await getExperienceRounds(id)
-        if (fetchedRounds && fetchedRounds.length > 0) {
-          setRounds(fetchedRounds.map((r, index) => ({
-            ...r,
-            tempId: index + 1
-          })))
-          setNextRoundId(fetchedRounds.length + 1)
-        }
-
-        // Fetch and map Resources
-        const fetchedResources = await getExperienceResources(id)
-        if (fetchedResources && fetchedResources.length > 0) {
-          setResources(fetchedResources.map((r, index) => ({
-            ...r,
-            tempId: index + 1
-          })))
-          setNextResourceId(fetchedResources.length + 1)
-        }
-
-      } catch (error) {
-        console.error("Error loading experience details:", error)
-      } finally {
-        setLoading(false)
+    if (editor && experienceType) {
+      if (editor.getHTML() === TEMPLATES.placement || editor.getHTML() === TEMPLATES.internship || editor.getHTML() === "<p></p>") {
+         editor.commands.setContent(TEMPLATES[experienceType])
       }
     }
-    
-    loadData()
-  }, [id, router, editor])
+  }, [experienceType, editor])
 
 
   const toggleTopic = (topic: string) => {
@@ -290,83 +236,95 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
     setResources(resources.filter(r => r.tempId !== tempId))
   }
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!editor || !experience) return
     
-    if (!author || !selectedCompany || !selectedBatch || !role || !selectionStatus || !title) {
+    if (!author || !authorEmail || !sapId || !selectedCompany || !selectedBatch || !experienceType || !role || !selectionStatus || !difficulty || !title) {
       alert("Please fill in all required fields.")
       return
     }
 
-    const content = editor.getHTML() || ""
+    const content = editor?.getHTML() || ""
     if (!content.trim() || content === "<p></p>") {
-      alert("Please write some content for the detailed experience.")
+      alert("Please write some content for your detailed experience.")
       return
     }
 
-    setIsSaving(true)
+    setIsSubmitting(true)
     try {
-      // 1. Update main experience
-      await updateExperience({
-        ...experience,
+      // 1. Save main experience
+      const savedExp = await saveExperience({
         batchId: selectedBatch,
         companyId: selectedCompany,
         title, 
         role, 
         duration, 
         author, 
+        authorEmail,
         content, 
         selectionStatus: selectionStatus as "selected" | "not-selected",
         ctc: ctc ? Math.round(Number.parseFloat(ctc) * 100) / 100 : null,
         offerType: offerType || null,
-        status, // keep existing status
-        sapId: sapId || null,
-        experienceType: (experienceType as "internship" | "placement") || null,
-        difficulty: (difficulty as "easy" | "medium" | "hard") || null,
+        tags: [],
+        status: "pending",
+        sapId,
+        experienceType: experienceType as "internship" | "placement",
+        difficulty: difficulty as "easy" | "medium" | "hard",
         topicsCovered: selectedTopics,
         tips: tips || null,
       })
 
-      // 2. Overwrite rounds (Delete old, insert new)
+      // 2. Save rounds if any
       const validRounds = rounds.filter(r => r.roundName.trim() !== "")
-      await deleteExperienceRounds(experience.id)
       if (validRounds.length > 0) {
-        await saveExperienceRounds(experience.id, validRounds.map(({ tempId, ...rest }) => rest))
+        await saveExperienceRounds(savedExp.id, validRounds.map(({ tempId, ...rest }) => rest))
       }
 
-      // 3. Overwrite resources (Delete old, insert new)
+      // 3. Save resources if any
       const validResources = resources.filter(r => r.resourceName.trim() !== "")
-      await deleteExperienceResources(experience.id)
       if (validResources.length > 0) {
-        await saveExperienceResources(experience.id, validResources.map(({ tempId, ...rest }) => rest))
+        await saveExperienceResources(savedExp.id, validResources.map(({ tempId, ...rest }) => rest))
       }
 
-      alert("Experience updated successfully!")
-      router.push(`/experience/${experience.id}`)
+      setIsSuccess(true)
+      window.scrollTo(0, 0)
     } catch (error) {
-      alert("Error updating experience. Please try again.")
+      alert("Error submitting experience. Please try again.")
       console.error(error)
     } finally {
-      setIsSaving(false)
+      setIsSubmitting(false)
     }
   }
 
-  if (!authChecked || loading) {
+  if (isSuccess) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-xl font-medium text-foreground">{!authChecked ? "Checking authentication..." : "Loading experience..."}</div>
-      </div>
-    )
-  }
-
-  if (!experience) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-xl font-medium text-foreground">Experience not found</p>
-          <Button asChild className="mt-4"><Link href="/admin">Go to Admin</Link></Button>
-        </div>
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="bg-card shadow-sm border-b sticky top-0 z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <Button variant="ghost" asChild><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" />Back to Home</Link></Button>
+              <ThemeToggle />
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 max-w-3xl mx-auto px-4 w-full py-16 flex items-center justify-center">
+          <Card className="w-full text-center p-8 border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-900/10">
+            <CardHeader>
+              <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <CardTitle className="text-2xl text-green-800 dark:text-green-300">Experience Submitted!</CardTitle>
+              <CardDescription className="text-base mt-2">
+                Thank you for sharing your experience. It is currently pending admin review.
+                Once approved, it will be visible on the public site to help your peers and juniors.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="mt-6">
+              <Button asChild><Link href="/">Return to Home</Link></Button>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
       </div>
     )
   }
@@ -376,25 +334,22 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
       <header className="bg-card shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Button variant="ghost" asChild><Link href={`/experience/${experience.id}`}><ArrowLeft className="w-4 h-4 mr-2" />Back to Experience</Link></Button>
-            <div className="flex items-center gap-2">
-              <Button onClick={handleSave} size="sm" disabled={isSaving}><Save className="w-4 h-4 mr-2" />{isSaving ? "Updating..." : "Update"}</Button>
-              <ThemeToggle />
-            </div>
+            <Button variant="ghost" asChild><Link href="/"><ArrowLeft className="w-4 h-4 mr-2" />Back to Home</Link></Button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
       <main className="flex-1 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
             <FileText className="w-8 h-8 text-primary" />
-            Edit Experience
+            Share Your Experience
           </h1>
-          <p className="text-muted-foreground">Admin editor for modifying submission details.</p>
+          <p className="text-muted-foreground">Help your juniors by sharing your interview process and insights.</p>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Section 1: Basic Info */}
           <Card>
             <CardHeader><CardTitle>1. Basic Information</CardTitle></CardHeader>
@@ -402,18 +357,22 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="author">Student Name *</Label>
-                  <Input id="author" value={author} onChange={(e) => setAuthor(e.target.value)} required />
+                  <Input id="author" placeholder="John Doe" value={author} onChange={(e) => setAuthor(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sapId">SAP ID</Label>
-                  <Input id="sapId" placeholder="6000000000" value={sapId} onChange={(e) => setSapId(e.target.value)} />
+                  <Label htmlFor="authorEmail">Email Address (For notifications) *</Label>
+                  <Input id="authorEmail" type="email" placeholder="john@example.com" value={authorEmail} onChange={(e) => setAuthorEmail(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sapId">SAP ID *</Label>
+                  <Input id="sapId" placeholder="6000000000" value={sapId} onChange={(e) => setSapId(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label>Company *</Label>
                   <CompanySelector onCompanySelect={setSelectedCompany} selectedCompany={selectedCompany} />
                   {selectedCompanyData && (
                     <div className="flex items-center gap-2 mt-2 p-2 bg-muted rounded">
-                      <NextImage src={selectedCompanyData.logo || "/placeholder.svg"} alt="logo" width={24} height={24} className="rounded" />
+                      <Image src={selectedCompanyData.logo || "/placeholder.svg"} alt="logo" width={24} height={24} className="rounded" />
                       <span className="text-sm text-muted-foreground">{selectedCompanyData.name}</span>
                     </div>
                   )}
@@ -423,8 +382,8 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                   <BatchSelector onBatchSelect={setSelectedBatch} selectedBatch={selectedBatch} />
                 </div>
                 <div className="space-y-2">
-                  <Label>Experience Type</Label>
-                  <Select value={experienceType} onValueChange={(v: any) => setExperienceType(v)}>
+                  <Label>Experience Type *</Label>
+                  <Select value={experienceType} onValueChange={(v: any) => setExperienceType(v)} required>
                     <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="internship">Internship</SelectItem>
@@ -434,7 +393,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role Applied For *</Label>
-                  <Input id="role" value={role} onChange={(e) => setRole(e.target.value)} required />
+                  <Input id="role" placeholder="Software Engineer" value={role} onChange={(e) => setRole(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
                   <Label>Selection Status *</Label>
@@ -463,21 +422,9 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
                     </div>
                   </>
                 )}
-                <div className="space-y-2">
-                  <Label>Current Status (Admin)</Label>
-                  <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-                    <SelectTrigger><SelectValue placeholder="Select status" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="needs_revision">Needs Revision</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="space-y-2 mt-4">
-                <Label>Overall Difficulty</Label>
+                <Label>Overall Difficulty *</Label>
                 <RadioGroup value={difficulty} onValueChange={(v: any) => setDifficulty(v)} className="flex gap-4">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="easy" id="r-easy" />
@@ -495,7 +442,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
               </div>
               <div className="space-y-2 mt-4">
                 <Label htmlFor="title">Experience Title *</Label>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+                <Input id="title" placeholder="My SDE Interview Experience at Google" value={title} onChange={(e) => setTitle(e.target.value)} required />
               </div>
             </CardContent>
           </Card>
@@ -504,6 +451,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           <Card>
             <CardHeader>
               <CardTitle>2. Topics Covered</CardTitle>
+              <CardDescription>Select all topics that were part of the interview process.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
@@ -525,9 +473,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           <Card>
             <CardHeader>
               <CardTitle>3. Interview Rounds</CardTitle>
+              <CardDescription>Add details for each round you went through.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {rounds.map((round) => (
+              {rounds.map((round, index) => (
                 <div key={round.tempId} className="p-4 border rounded-lg bg-muted/30 relative">
                   <Button type="button" variant="ghost" size="icon" className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30" onClick={() => removeRound(round.tempId)}>
                     <Trash2 className="w-4 h-4" />
@@ -572,6 +521,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           <Card>
             <CardHeader>
               <CardTitle>4. Detailed Experience</CardTitle>
+              <CardDescription>Share your complete journey, thoughts, and advice.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="border border-input bg-transparent rounded-md overflow-hidden">
@@ -585,9 +535,10 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           <Card>
             <CardHeader>
               <CardTitle>5. Tips & Advice</CardTitle>
+              <CardDescription>Any specific advice for your juniors preparing for this company?</CardDescription>
             </CardHeader>
             <CardContent>
-              <Textarea placeholder="Tips for juniors..." value={tips} onChange={(e) => setTips(e.target.value)} rows={4} />
+              <Textarea placeholder="Focus heavily on Dynamic Programming. Practice mock interviews..." value={tips} onChange={(e) => setTips(e.target.value)} rows={4} />
             </CardContent>
           </Card>
 
@@ -595,6 +546,7 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           <Card>
             <CardHeader>
               <CardTitle>6. Preparation Resources</CardTitle>
+              <CardDescription>Share links or names of resources that helped you prepare.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {resources.map((res) => (
@@ -619,12 +571,13 @@ export default function EditExperiencePage({ params }: EditExperiencePageProps) 
           </Card>
 
           <div className="flex justify-end pt-4 pb-12">
-            <Button type="submit" size="lg" disabled={isSaving} className="w-full sm:w-auto px-8">
-              {isSaving ? "Saving..." : <><Save className="w-4 h-4 mr-2" /> Save Changes</>}
+            <Button type="submit" size="lg" disabled={isSubmitting} className="w-full sm:w-auto px-8">
+              {isSubmitting ? "Submitting..." : <><Send className="w-4 h-4 mr-2" /> Submit Experience</>}
             </Button>
           </div>
         </form>
       </main>
+      <Footer />
     </div>
   )
 }
